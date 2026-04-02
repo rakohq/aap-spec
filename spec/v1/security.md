@@ -1,0 +1,126 @@
+# Security
+
+> Cryptographic signing, fraud prevention, and trust model.
+
+## Cryptographic Signing
+
+### Ed25519 Signatures
+
+All AAP Codes are signed using Ed25519 (EdDSA over Curve25519). This provides:
+
+- **Authenticity:** Only Affili AI's private key can produce valid signatures
+- **Integrity:** Any modification to the payload invalidates the signature
+- **Non-repudiation:** Affili AI cannot deny having issued a validly signed code
+- **Efficiency:** 64-byte signatures, fast signing/verification
+
+### Key Management
+
+- **Private key:** Stored on Affili AI's servers. Never transmitted. Used only for signing.
+- **Public key:** Published at `/v1/codes/public-key`. Anyone can verify signatures independently.
+- **Key rotation:** Keys are rotated annually. Old public keys remain available for verification of previously issued codes. The `iat` (issued at) timestamp determines which key to use.
+
+### Event Chain
+
+Every event in the attribution chain is logged with:
+- Timestamp
+- Agent/merchant identity
+- Event type (search, recommend, click, checkout, conversion)
+- Reference to previous event (hash chain)
+
+This creates a tamper-evident audit trail. Modifying any event breaks the chain for all subsequent events.
+
+## Fraud Prevention
+
+### Agent-Specific Fraud Types
+
+| Fraud Type | Description | Prevention |
+|------------|-------------|------------|
+| **Session stuffing** | Agent creates thousands of sessions hoping some convert | Rate limiting per agent/builder. Conversion rate floors. |
+| **Identity spoofing** | Agent claims to be a different registered agent | Cryptographic identity via API key. Signed session tokens. |
+| **Commission hijacking** | Agent intercepts another agent's session | Session tokens bound to originating agent. Non-transferable. |
+| **Fake conversions** | Agent simulates a transaction | Merchant-side confirmation required. No self-reporting. |
+| **Self-dealing** | Builder creates fake users | User verification required (phone, email, payment method). |
+| **Churning** | Agent signs up users who immediately cancel | Validation periods + clawback. High churn → builder flagged. |
+| **Click fraud** | Automated clicks on fallback links | IP deduplication, rate limiting, bot detection on redirect service. |
+
+### Detection Signals
+
+- Conversion rate anomalies (too high or too low)
+- Velocity checks (too many sessions/recommendations in short period)
+- Cancellation rate spikes
+- Geographic anomalies (agent claims UK but traffic from elsewhere)
+- User agent analysis on redirect clicks
+- Temporal patterns (all conversions at same time of day)
+
+### Enforcement
+
+| Severity | Action |
+|----------|--------|
+| Suspicious | Flag for review. Continue paying. |
+| Probable fraud | Pause payouts. Manual review. |
+| Confirmed fraud | Suspend builder. Claw back all pending commission. |
+| Repeat offender | Permanent ban. Report to fraud databases. |
+
+## Trust Model
+
+### Open Spec, Centralised Trust
+
+AAP uses the same trust model as DNS, Visa, and Stripe:
+
+| Layer | Open or Centralised |
+|-------|-------------------|
+| The specification | **Open** — anyone can read and implement |
+| AAP Code issuance | **Centralised** — only Affili AI issues valid codes |
+| Verification | **Centralised** — Affili AI verifies conversions |
+| Settlement | **Centralised** — Affili AI settles commission |
+| Fraud detection | **Closed** — proprietary models and rules |
+
+### What Each Party Can Verify
+
+**Merchants:**
+- All transactions attributed to them
+- Commission calculations
+- Session logs for any transaction
+
+**Builders:**
+- All transactions their agents drove
+- Commission earned and settled
+- Clawback justifications
+
+**Neither can see:**
+- Other parties' data
+- Cross-network intelligence
+- Fraud model internals
+
+### Why Not Blockchain
+
+The same question comes up every time someone builds a trust layer. The answer for AAP:
+
+- **Speed:** Agent transactions happen in milliseconds. Block confirmation takes seconds to minutes.
+- **Cost:** Per-transaction on-chain fees eat into commissions.
+- **Privacy:** On-chain data is visible. Merchant and builder data must be siloed.
+- **Equivalent guarantee:** Hash-chained signed logs provide the same tamper-evidence without distributed consensus overhead.
+
+The trust comes from cryptography, not consensus. Ed25519 signatures are just as unforgeable whether they're stored in a database or on a blockchain.
+
+## API Security
+
+### Authentication
+- API keys transmitted via HTTPS only
+- Keys are hashed (SHA-256) before storage — Affili AI cannot read raw keys
+- Keys can be rotated by the builder/merchant at any time
+- Compromised keys can be revoked immediately
+
+### Transport
+- TLS 1.3 required for all API communication
+- HSTS enforced
+- Certificate pinning recommended for SDK implementations
+
+### Rate Limiting
+- Per-key rate limits prevent abuse
+- Graduated response: slow down → temporary block → review
+- DDoS protection via Cloudflare
+
+---
+
+*AAP Specification v1.0.0*
