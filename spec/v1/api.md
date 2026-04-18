@@ -2,7 +2,7 @@
 
 > AAP REST API v1
 
-Base URL: `https://api.affili.ai`
+Base URL: `https://api.rako.sh`
 
 ## Authentication
 
@@ -73,7 +73,7 @@ Search and filter available offers. Automatically creates a session.
         "5g": false,
         "eu_roaming_included": true
       },
-      "aapCode": "aap://affili.ai/v1/...",
+      "aapCode": "aap://rako.sh/v1/...",
       "status": "active"
     }
   ],
@@ -230,12 +230,12 @@ Issue a signed AAP Code for an offer.
 Verify an AAP Code. No authentication required.
 
 ```json
-{ "code": "aap://affili.ai/v1/..." }
+{ "code": "aap://rako.sh/v1/..." }
 ```
 
 #### `GET /v1/codes/public-key`
 
-Get Affili AI's public key for independent verification.
+Get Rako's public key for independent verification.
 
 ---
 

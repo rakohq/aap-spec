@@ -12,7 +12,7 @@ The Agent Attribution Protocol (AAP) is an open specification for attributing AI
 4. **Conversions** are matched to recommendations
 5. **Commission** is calculated and settled
 
-AAP is an open spec with a centralised trust model. The specification is public — anyone can read it, understand it, build for it. The issuance, verification, and settlement are operated by Affili AI.
+AAP is an open spec with a centralised trust model. The specification is public — anyone can read it, understand it, build for it. The issuance, verification, and settlement are operated by Rako.
 
 ## 2. Participants
 
@@ -25,7 +25,7 @@ Developers who build AI agents. They integrate the AAP SDK so their agents can d
 ### Agents
 AI systems (Claude, ChatGPT, custom agents) that recommend products to users on behalf of their builders.
 
-### Affili AI (Protocol Authority)
+### Rako (Protocol Authority)
 The entity that operates the AAP infrastructure:
 - Issues and signs AAP Codes
 - Operates the offer registry
@@ -37,7 +37,7 @@ The entity that operates the AAP infrastructure:
 ## 3. Core Concepts
 
 ### AAP Code
-A cryptographically signed token issued by Affili AI for every offer. It is the core attribution primitive. See [aap-code.md](./aap-code.md).
+A cryptographically signed token issued by Rako for every offer. It is the core attribution primitive. See [aap-code.md](./aap-code.md).
 
 ### Session
 A bounded interaction between an agent and the AAP API. Created when an agent searches for offers. Expires after 24 hours. One session tracks one user intent through to completion. Sessions are non-transferable.
@@ -108,10 +108,10 @@ CREATED → ACTIVE → CHECKOUT → CONVERTED → VALIDATED → SETTLED
 
 | Level | Package | For |
 |-------|---------|-----|
-| MCP Server | `@affiliai/mcp` | Claude, ChatGPT, any MCP-compatible agent |
-| JavaScript SDK | `@affiliai/sdk` | Web agents, Node.js agents |
+| MCP Server | `@rakohq/mcp` | Claude, ChatGPT, any MCP-compatible agent |
+| JavaScript SDK | `@rakohq/sdk` | Web agents, Node.js agents |
 | Python SDK | `agent-attribution-protocol` | Python agents, LangChain, CrewAI |
-| REST API | `api.affili.ai` | Any language, any platform |
+| REST API | `api.rako.sh` | Any language, any platform |
 
 ## 7. Sub-specifications
 
@@ -131,4 +131,4 @@ Current version: **v1.0.0**
 ---
 
 *AAP Specification v1.0.0 — Published 2 April 2026*
-*Affili AI Ltd — [affili.ai](https://affili.ai)*
+*Rako Ltd — [rako.sh](https://rako.sh)*

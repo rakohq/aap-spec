@@ -4,19 +4,19 @@
 
 ## What It Is
 
-An AAP Code is a cryptographically signed token issued by Affili AI for every offer. It encodes everything needed for attribution in a single, tamper-proof string.
+An AAP Code is a cryptographically signed token issued by Rako for every offer. It encodes everything needed for attribution in a single, tamper-proof string.
 
-An agent cannot fake one. A merchant cannot self-issue one. A competitor cannot generate one that Affili AI will honour.
+An agent cannot fake one. A merchant cannot self-issue one. A competitor cannot generate one that Rako will honour.
 
 ## Format
 
 ```
-aap://affili.ai/v1/{base64url_payload}.{base64url_signature}
+aap://rako.sh/v1/{base64url_payload}.{base64url_signature}
 ```
 
 **Example:**
 ```
-aap://affili.ai/v1/eyJ2IjoiMSIsImlzcyI6ImFmZmlsaS5haSIsIm9mZiI6IjAxSlFYSzEwMDFTTUFSVFkxR0IwMDAwMDEiLCJtZXIiOiIwMUpRWEswMDAxU01BUlRZMDAwMDAwMDAxIiwicHJvIjoiU01BUlRZIiwicHJkIjoiMUdCIFJvbGxpbmcgTW9udGhseSIsInByYyI6NiwiY3VyIjoiR0JQIiwiY29tIjp7InR5cGUiOiJjcGEiLCJ2YWx1ZSI6OH0sImlhdCI6MTc0MzU4MDcyNSwiZXhwIjoxNzQ2MTcyNzI1fQ.SIGNATURE
+aap://rako.sh/v1/eyJ2IjoiMSIsImlzcyI6InJha28uc2giLCJvZmYiOiIwMUpRWEsxMDAxU01BUlRZMUdCMDAwMDAxIiwibWVyIjoiMDFKUVhLMDAwMVNNQVJUWTAwMDAwMDAwMSIsInBybyI6IlNNQVJUWSIsInByZCI6IjFHQiBSb2xsaW5nIE1vbnRobHkiLCJwcmMiOjYsImN1ciI6IkdCUCIsImNvbSI6eyJ0eXBlIjoiY3BhIiwidmFsdWUiOjh9LCJpYXQiOjE3NDM1ODA3MjUsImV4cCI6MTc0NjE3MjcyNX0.SIGNATURE
 ```
 
 ## Payload Schema
@@ -24,7 +24,7 @@ aap://affili.ai/v1/eyJ2IjoiMSIsImlzcyI6ImFmZmlsaS5haSIsIm9mZiI6IjAxSlFYSzEwMDFTT
 | Field | Type | Description |
 |-------|------|-------------|
 | `v` | string | Protocol version. Always `"1"` for v1. |
-| `iss` | string | Issuer. Always `"affili.ai"`. |
+| `iss` | string | Issuer. Always `"rako.sh"`. |
 | `off` | string | Offer ID in the AAP registry. |
 | `mer` | string | Merchant ID in the AAP registry. |
 | `pro` | string | Provider name (e.g. "SMARTY"). |
@@ -54,26 +54,26 @@ AAP Codes are signed using **Ed25519** (EdDSA over Curve25519).
 1. Construct the payload as a JSON object
 2. Serialise to UTF-8 bytes
 3. Encode as base64url (no padding)
-4. Sign the UTF-8 payload bytes with Affili AI's Ed25519 private key
+4. Sign the UTF-8 payload bytes with Rako's Ed25519 private key
 5. Encode signature as base64url
-6. Concatenate: `aap://affili.ai/v1/{payload_b64url}.{signature_b64url}`
+6. Concatenate: `aap://rako.sh/v1/{payload_b64url}.{signature_b64url}`
 
 ### Verification Process
 
 1. Parse the code: extract payload and signature (split on last `.`)
 2. Decode payload from base64url to UTF-8 bytes
 3. Decode signature from base64url to bytes
-4. Verify the signature against the payload bytes using Affili AI's Ed25519 public key
+4. Verify the signature against the payload bytes using Rako's Ed25519 public key
 5. If valid, decode payload JSON
 6. Check `exp` > current time
-7. Check `iss` == `"affili.ai"`
+7. Check `iss` == `"rako.sh"`
 
 ### Public Key Distribution
 
-Affili AI's public key is available at:
+Rako's public key is available at:
 
 ```
-GET https://api.affili.ai/v1/codes/public-key
+GET https://api.rako.sh/v1/codes/public-key
 ```
 
 Returns:
@@ -101,7 +101,7 @@ Authorization: Bearer <api_key>
 Response:
 ```json
 {
-  "aapCode": "aap://affili.ai/v1/...",
+  "aapCode": "aap://rako.sh/v1/...",
   "payload": { ... },
   "expiresAt": "2026-05-02T08:18:45.000Z"
 }
@@ -112,14 +112,14 @@ Response:
 ```
 POST /v1/codes/verify
 
-{ "code": "aap://affili.ai/v1/..." }
+{ "code": "aap://rako.sh/v1/..." }
 ```
 
 Response (valid):
 ```json
 {
   "valid": true,
-  "issuer": "affili.ai",
+  "issuer": "rako.sh",
   "offer": { "id": "...", "provider": "SMARTY", "product": "1GB Rolling Monthly", "price": 6, "currency": "GBP" },
   "commission": { "type": "cpa", "value": 8 },
   "issuedAt": "2026-04-02T08:18:45.000Z",
@@ -141,9 +141,9 @@ When a valid AAP Code is present:
 
 1. **The offer is real.** It was published by a verified merchant on the AAP registry.
 2. **The price is current.** It was accurate at the time of issuance.
-3. **The merchant is vetted.** They passed Affili AI's merchant verification.
+3. **The merchant is vetted.** They passed Rako's merchant verification.
 4. **The commission terms are immutable.** They were locked at issuance and cannot be altered retroactively.
-5. **The code is authentic.** Only Affili AI's private key could have produced the signature.
+5. **The code is authentic.** Only Rako's private key could have produced the signature.
 
 ## What the AAP Code Does NOT Guarantee
 

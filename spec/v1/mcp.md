@@ -13,10 +13,10 @@ The AAP MCP server exposes three tools that allow any MCP-compatible AI agent to
   "mcpServers": {
     "aap": {
       "command": "bunx",
-      "args": ["@affiliai/mcp"],
+      "args": ["@rakohq/mcp"],
       "env": {
         "AAP_API_KEY": "your-api-key",
-        "AAP_API_URL": "https://api.affili.ai"
+        "AAP_API_URL": "https://api.rako.sh"
       }
     }
   }

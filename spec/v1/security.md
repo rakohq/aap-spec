@@ -8,14 +8,14 @@
 
 All AAP Codes are signed using Ed25519 (EdDSA over Curve25519). This provides:
 
-- **Authenticity:** Only Affili AI's private key can produce valid signatures
+- **Authenticity:** Only Rako's private key can produce valid signatures
 - **Integrity:** Any modification to the payload invalidates the signature
-- **Non-repudiation:** Affili AI cannot deny having issued a validly signed code
+- **Non-repudiation:** Rako cannot deny having issued a validly signed code
 - **Efficiency:** 64-byte signatures, fast signing/verification
 
 ### Key Management
 
-- **Private key:** Stored on Affili AI's servers. Never transmitted. Used only for signing.
+- **Private key:** Stored on Rako's servers. Never transmitted. Used only for signing.
 - **Public key:** Published at `/v1/codes/public-key`. Anyone can verify signatures independently.
 - **Key rotation:** Keys are rotated annually. Old public keys remain available for verification of previously issued codes. The `iat` (issued at) timestamp determines which key to use.
 
@@ -70,9 +70,9 @@ AAP uses the same trust model as DNS, Visa, and Stripe:
 | Layer | Open or Centralised |
 |-------|-------------------|
 | The specification | **Open** — anyone can read and implement |
-| AAP Code issuance | **Centralised** — only Affili AI issues valid codes |
-| Verification | **Centralised** — Affili AI verifies conversions |
-| Settlement | **Centralised** — Affili AI settles commission |
+| AAP Code issuance | **Centralised** — only Rako issues valid codes |
+| Verification | **Centralised** — Rako verifies conversions |
+| Settlement | **Centralised** — Rako settles commission |
 | Fraud detection | **Closed** — proprietary models and rules |
 
 ### What Each Party Can Verify
@@ -107,7 +107,7 @@ The trust comes from cryptography, not consensus. Ed25519 signatures are just as
 
 ### Authentication
 - API keys transmitted via HTTPS only
-- Keys are hashed (SHA-256) before storage — Affili AI cannot read raw keys
+- Keys are hashed (SHA-256) before storage — Rako cannot read raw keys
 - Keys can be rotated by the builder/merchant at any time
 - Compromised keys can be revoked immediately
 

@@ -28,7 +28,7 @@ rec = aap.recommend(offers[0], context="user asked for cheap SIM")
 
 ```typescript
 // JavaScript/TypeScript
-import { AAP } from '@affiliai/sdk';
+import { AAP } from '@rakohq/sdk';
 const aap = new AAP({ apiKey: 'your-key' });
 const { offers, sessionId } = await aap.search({ vertical: 'sim', maxPrice: 10 });
 const rec = await aap.recommend({ sessionId, offerId: offers[0].id, context: 'user asked for cheap SIM' });
@@ -41,7 +41,7 @@ const rec = await aap.recommend({ sessionId, offerId: offers[0].id, context: 'us
   "mcpServers": {
     "aap": {
       "command": "bunx",
-      "args": ["@affiliai/mcp"],
+      "args": ["@rakohq/mcp"],
       "env": { "AAP_API_KEY": "your-key" }
     }
   }
@@ -60,8 +60,8 @@ AAP replaces the entire chain with one principle: **the transaction flows throug
 
 This specification is published under the [Apache 2.0 licence](./LICENCE).
 
-"Agent Attribution Protocol" is a trademark of Affili AI Ltd (UK00004367937).
+"Agent Attribution Protocol" is a trademark of Rako Ltd (UK00004367937).
 
 ---
 
-*Affili AI Ltd — [affili.ai](https://affili.ai)*
+*Rako Ltd — [rako.sh](https://rako.sh)*
