@@ -38,6 +38,52 @@ aap://rako.sh/v1/eyJ2IjoiMSIsImlzcyI6InJha28uc2giLCJvZmYiOiIwMUpRWEsxMDAxU01BUlR
 | `iat` | number | Issued at (Unix timestamp). |
 | `exp` | number | Expiry (Unix timestamp). Default: 30 days from issuance. |
 
+---
+
+## Payment Metadata Embedding
+
+When a purchase is initiated through AAP, the AAP Code is embedded in payment metadata by the AAP platform via Hyperswitch. Agents do **not** manually embed AAP Codes in order notes or descriptions.
+
+### How It Works
+
+1. Agent calls `POST /v1/purchase` with a `recommendationId`.
+2. AAP creates a payment link/intent on the merchant's PSP via Hyperswitch.
+3. AAP sets the following metadata on the payment object:
+
+```json
+{
+  "metadata": {
+    "aap_code": "aap://rako.sh/v1/{base64url_payload}.{base64url_signature}",
+    "aap_recommendation_id": "01JQXK1001SMARTY1GB000001",
+    "aap_session_id": "sess_abc123"
+  }
+}
+```
+
+4. The merchant's PSP stores this metadata alongside the payment record.
+5. On payment completion, the PSP webhook delivers the metadata back to AAP.
+6. AAP verifies the `aap_code` signature and matches it to the recommendation.
+
+### Why Platform-Side Embedding
+
+| Approach | Problem |
+|----------|----------|
+| Agent embeds AAP Code in order notes | Agent can forge or omit codes |
+| Merchant embeds AAP Code at checkout | Merchant can strip codes to avoid commission |
+| **AAP embeds via Hyperswitch** | **Tamper-proof — neither agent nor merchant controls metadata** |
+
+Because AAP creates the payment object through Hyperswitch, the AAP Code is set at creation time. The merchant's PSP stores it as immutable payment metadata. Neither the agent nor the merchant can modify it after creation.
+
+### Verification on Webhook
+
+When AAP receives a payment webhook, it:
+
+1. Extracts `metadata.aap_code` from the payment event.
+2. Verifies the Ed25519 signature against the public key at `rako.sh/.well-known/jwks.json`.
+3. Decodes the payload and confirms the offer, merchant, and price match.
+4. Checks the payment amount matches the AAP Code price (within tolerance).
+5. Records the conversion as **verified** if all checks pass.
+
 ## Signing
 
 AAP Codes are signed using **Ed25519** (EdDSA over Curve25519).
