@@ -46,7 +46,7 @@ A bounded interaction between an agent and the AAP API. Created when an agent se
 An attribution event. When an agent calls `recommend()`, it records who recommended what, when, why, and where. This is the equivalent of a "click" in traditional affiliate marketing.
 
 ### Conversion
-A completed transaction. When a user purchases a recommended product, the merchant reports the conversion. AAP matches it to the original recommendation.
+A completed transaction or approved commercial outcome. When a user purchases, applies, activates, or otherwise completes the merchant-defined conversion event for a recommended product, the merchant or payment evidence source reports the conversion. AAP matches it to the original recommendation and records it in the conversion ledger.
 
 ### Commission
 The payment from merchant to agent builder for driving a sale. Calculated based on merchant-defined terms, minus the 20% network fee.
@@ -66,9 +66,9 @@ The payment from merchant to agent builder for driving a sale. Calculated based 
                Agent calls checkout() → transaction initiated
                AAP routes to merchant checkout
 
-4. CONVERT     Merchant confirms the sale
-               Merchant calls conversions API with order details
-               AAP matches conversion to recommendation
+4. CONVERT     Merchant or payment evidence source confirms the outcome
+               Conversion evidence includes checkout attribution metadata
+               AAP matches conversion to recommendation and records ledger entry
 
 5. SETTLE      Validation period passes (no cancellation)
                Commission calculated: merchant terms minus 20% network fee
@@ -118,6 +118,7 @@ CREATED → ACTIVE → CHECKOUT → CONVERTED → VALIDATED → SETTLED
 - **[AAP Code](./aap-code.md)** — Signed attribution token format and verification
 - **[Attribution Model](./attribution.md)** — Binary attribution + fallback chain
 - **[Commission Model](./commission.md)** — Types, floors, calculation, settlement
+- **[Conversion Ledger](./conversion-ledger.md)** — Checkout metadata, conversion lifecycle, and settlement fields
 - **[API Reference](./api.md)** — REST endpoints
 - **[MCP Integration](./mcp.md)** — MCP tool definitions
 - **[Payment Architecture](./payments.md)** — Payment modes, verification, Hyperswitch integration

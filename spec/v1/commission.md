@@ -99,6 +99,8 @@ Builders can challenge clawbacks through the dispute process with evidence from 
 
 ## Settlement
 
+Settlement is recorded as ledger fields linked to a validated conversion. The protocol fields are defined in [conversion-ledger.md](./conversion-ledger.md); implementations may invoice merchants, batch payouts, or use external payout rails without changing the attribution record.
+
 ### Schedule
 Commission is settled monthly, after validation periods close for the relevant transactions.
 

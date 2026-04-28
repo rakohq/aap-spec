@@ -40,28 +40,31 @@ aap://rako.sh/v1/eyJ2IjoiMSIsImlzcyI6InJha28uc2giLCJvZmYiOiIwMUpRWEsxMDAxU01BUlR
 
 ---
 
-## Payment Metadata Embedding
+## Checkout Metadata Embedding
 
-When a purchase is initiated through AAP, the AAP Code is embedded in payment metadata by the AAP platform via Hyperswitch. Agents do **not** manually embed AAP Codes in order notes or descriptions.
+When checkout is initiated through AAP, the AAP Code is carried in checkout attribution metadata by the AAP platform or certified merchant integration. In payment-orchestrated flows this metadata may be stored on a payment object via Hyperswitch. Agents do **not** manually embed AAP Codes in order notes or descriptions.
 
 ### How It Works
 
-1. Agent calls `POST /v1/purchase` with a `recommendationId`.
-2. AAP creates a payment link/intent on the merchant's PSP via Hyperswitch.
-3. AAP sets the following metadata on the payment object:
+1. Agent calls `POST /v1/checkout` with a `recommendationId`.
+2. AAP creates or records a checkout attempt for the merchant flow.
+3. AAP or the certified merchant integration sets the following metadata on the checkout, payment, order, application, or equivalent durable transaction object:
 
 ```json
 {
   "metadata": {
     "aap_code": "aap://rako.sh/v1/{base64url_payload}.{base64url_signature}",
-    "aap_recommendation_id": "01JQXK1001SMARTY1GB000001",
-    "aap_session_id": "sess_abc123"
+    "aap_recommendation_id": "01KN6KWQDZ6Y5HPW8KFSDPKNSQ",
+    "aap_session_id": "sess_abc123",
+    "aap_offer_id": "01JQXK1001SMARTY1GB000001",
+    "aap_merchant_id": "01JQXK0001SMARTY000000001",
+    "aap_checkout_id": "01KN6KWQEENKX01N1TZE3R1TPX"
   }
 }
 ```
 
-4. The merchant's PSP stores this metadata alongside the payment record.
-5. On payment completion, the PSP webhook delivers the metadata back to AAP.
+4. The merchant or payment system stores this metadata alongside the transaction record.
+5. On conversion, the merchant, payment source, or reconciliation process delivers the metadata or a durable reference back to AAP.
 6. AAP verifies the `aap_code` signature and matches it to the recommendation.
 
 ### Why Platform-Side Embedding
@@ -69,10 +72,10 @@ When a purchase is initiated through AAP, the AAP Code is embedded in payment me
 | Approach | Problem |
 |----------|----------|
 | Agent embeds AAP Code in order notes | Agent can forge or omit codes |
-| Merchant embeds AAP Code at checkout | Merchant can strip codes to avoid commission |
-| **AAP embeds via Hyperswitch** | **Tamper-proof — neither agent nor merchant controls metadata** |
+| Merchant stores only an unaudited free-text note | Metadata can be stripped or altered without evidence |
+| **AAP or certified integration stores structured metadata** | **Auditable — attribution fields are bound to the checkout and conversion evidence** |
 
-Because AAP creates the payment object through Hyperswitch, the AAP Code is set at creation time. The merchant's PSP stores it as immutable payment metadata. Neither the agent nor the merchant can modify it after creation.
+For orchestrated payment flows, AAP can set the metadata when creating the payment object through Hyperswitch. For merchant-controlled flows, the certified integration must preserve the same fields on a durable order/application record and return them during conversion reporting.
 
 ### Verification on Webhook
 
@@ -81,8 +84,8 @@ When AAP receives a payment webhook, it:
 1. Extracts `metadata.aap_code` from the payment event.
 2. Verifies the Ed25519 signature against the public key at `rako.sh/.well-known/jwks.json`.
 3. Decodes the payload and confirms the offer, merchant, and price match.
-4. Checks the payment amount matches the AAP Code price (within tolerance).
-5. Records the conversion as **verified** if all checks pass.
+4. Checks the transaction value matches the expected offer or merchant-defined conversion value within tolerance.
+5. Records the conversion with the appropriate verification level if all checks pass.
 
 ## Signing
 

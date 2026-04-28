@@ -147,10 +147,20 @@ Initiate checkout for a recommended offer.
 {
   "transactionId": "01KN6KWQEENKX01N1TZE3R1TPX",
   "status": "initiated",
-  "checkoutUrl": "https://merchant.com/checkout?aap_ref=...",
+  "checkoutUrl": "https://checkout.rako.sh/c/01KN6KWQEENKX01N1TZE3R1TPX",
+  "attributionMetadata": {
+    "aap_code": "aap://rako.sh/v1/...",
+    "aap_recommendation_id": "01KN6KWQDZ6Y5HPW8KFSDPKNSQ",
+    "aap_session_id": "01KN6KV0TWMH8VS6TDS3S7V2EJ",
+    "aap_offer_id": "01JQXK1001SMARTY1GB000001",
+    "aap_merchant_id": "01JQXK0001SMARTY000000001",
+    "aap_checkout_id": "01KN6KWQEENKX01N1TZE3R1TPX"
+  },
   "session": { "id": "...", "status": "checkout" }
 }
 ```
+
+The `attributionMetadata` object is shown for protocol clarity. In hosted or payment-orchestrated checkout flows, Rako or the certified merchant integration stores these fields on the underlying checkout, payment, order, or application record. See [conversion-ledger.md](./conversion-ledger.md).
 
 ---
 
@@ -182,15 +192,30 @@ Get session details including recommendations and conversions.
 
 #### `POST /v1/conversions`
 
-Report a completed sale. Called by merchants when a transaction completes.
+Report a completed sale or merchant-defined conversion outcome. Called by merchants, certified integrations, or payment evidence sources when a transaction completes.
 
 **Request Body:**
 
 ```json
 {
   "sessionId": "01KN6KV0TWMH8VS6TDS3S7V2EJ",
+  "recommendationId": "01KN6KWQDZ6Y5HPW8KFSDPKNSQ",
   "orderReference": "ORD-123456",
-  "transactionValue": 6.00
+  "transactionValue": 6.00,
+  "currency": "GBP",
+  "convertedAt": "2026-04-02T08:14:00.000Z",
+  "attributionMetadata": {
+    "aap_code": "aap://rako.sh/v1/...",
+    "aap_recommendation_id": "01KN6KWQDZ6Y5HPW8KFSDPKNSQ",
+    "aap_session_id": "01KN6KV0TWMH8VS6TDS3S7V2EJ",
+    "aap_offer_id": "01JQXK1001SMARTY1GB000001",
+    "aap_merchant_id": "01JQXK0001SMARTY000000001",
+    "aap_checkout_id": "01KN6KWQEENKX01N1TZE3R1TPX"
+  },
+  "evidence": {
+    "source": "merchant_api",
+    "reference": "evt_merchant_123456"
+  }
 }
 ```
 
@@ -199,17 +224,24 @@ Report a completed sale. Called by merchants when a transaction completes.
 ```json
 {
   "conversionId": "01KN6KWQEP989CQWK1FPR94FE1",
-  "sessionId": "...",
+  "sessionId": "01KN6KV0TWMH8VS6TDS3S7V2EJ",
+  "recommendationId": "01KN6KWQDZ6Y5HPW8KFSDPKNSQ",
   "orderReference": "ORD-123456",
   "transactionValue": 6.00,
+  "currency": "GBP",
+  "attributionPath": "aap_flow",
+  "verificationLevel": "merchant_reported",
   "commission": {
-    "amount": 8.00,
+    "commissionId": "01KN6KWQF5J2Q8V1MDZC4FXP7Z",
+    "grossCommission": 8.00,
     "networkFee": 1.60,
     "builderPayout": 6.40,
-    "type": "cpa"
+    "type": "cpa",
+    "settlementStatus": "pending"
   },
-  "status": "pending",
-  "validationPeriodDays": 30
+  "status": "pending_validation",
+  "validationPeriodDays": 30,
+  "validationEndsAt": "2026-05-02T08:14:00.000Z"
 }
 ```
 

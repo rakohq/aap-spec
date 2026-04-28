@@ -4,7 +4,7 @@
 
 ## Core Principle
 
-AAP does not process payments. AAP orchestrates payments on the merchant's own payment processor via Hyperswitch. The merchant pays the same processor fees they'd pay on their own website. Commission is invoiced separately to the merchant as a B2B receivable.
+AAP does not need to process customer funds to attribute a conversion. In the default AAP flow, AAP can orchestrate checkout on the merchant's own payment processor via Hyperswitch or another approved payment-orchestration path. The merchant pays the same processor fees they'd pay on their own website. Commission is invoiced separately to the merchant as a B2B receivable.
 
 ---
 
@@ -15,8 +15,8 @@ AAP does not process payments. AAP orchestrates payments on the merchant's own p
 The agent recommends. The user completes checkout.
 
 ```
-Agent → POST /v1/purchase { recommendationId }
-  ← { checkoutUrl, paymentId }
+Agent → POST /v1/checkout { recommendationId }
+  ← { checkoutUrl, transactionId }
 
 User → opens checkoutUrl (Hyperswitch payment link)
   → enters card on merchant's PSP-hosted checkout
@@ -27,7 +27,7 @@ Hyperswitch → webhook to AAP
 ```
 
 **Flow:**
-1. Agent calls `POST /v1/purchase` with the `recommendationId` from a prior recommendation.
+1. Agent calls `POST /v1/checkout` with the `recommendationId` from a prior recommendation.
 2. AAP creates a Hyperswitch payment link on the merchant's connected processor.
 3. AAP embeds the AAP Code in the payment's `metadata.aap_code` field.
 4. The checkout URL is returned to the agent, which presents it to the user.
@@ -41,8 +41,8 @@ Hyperswitch → webhook to AAP
 The agent has stored payment credentials and completes the purchase without user interaction.
 
 ```
-Agent → POST /v1/purchase { recommendationId, paymentMethod }
-  ← { confirmation, paymentId, status }
+Agent → POST /v1/checkout { recommendationId, paymentMethod }
+  ← { confirmation, transactionId, status }
 
 Hyperswitch → processes via merchant's PSP
   → webhook to AAP
@@ -50,7 +50,7 @@ Hyperswitch → processes via merchant's PSP
 ```
 
 **Flow:**
-1. Agent calls `POST /v1/purchase` with `recommendationId` and a `paymentMethod` (tokenised card, stored credential).
+1. Agent calls `POST /v1/checkout` with `recommendationId` and a `paymentMethod` (tokenised card, stored credential).
 2. AAP creates a Hyperswitch payment intent and processes it directly.
 3. AAP Code is embedded in payment metadata.
 4. Payment settles to merchant via merchant's PSP. AAP never touches funds.
@@ -78,12 +78,18 @@ AAP trusts the PSP. The PSP reports what happened: payment created, succeeded or
 
 | Level | Source | Trust | Commission Rate | Settlement Speed |
 |-------|--------|-------|-----------------|------------------|
-| **Verified** | Hyperswitch PSP webhook | Trustless — neutral third party confirms payment | Full commission | Standard (after validation period) |
-| **Unverified** | Agent callback or merchant self-report | Trust-dependent — requires validation period | Reduced commission (75%) | Delayed (extended validation period) |
+| **Orchestrated** | Payment-orchestration webhook with AAP metadata | Strong — neutral payment source confirms payment | Full commission | Standard (after validation period) |
+| **Merchant-reported** | Merchant conversion API or webhook | Merchant attestation plus audit rights | Path-dependent | Standard or extended validation period |
+| **Payment-observed** | Payment processor, open banking, or reconciliation feed | Strong where source is independent | Path-dependent | Standard (after validation period) |
+| **Reconciled** | Batch import or manual reconciliation | Evidence-dependent | Path-dependent | Delayed or manual review |
 
-**Verified conversions** are confirmed by the merchant's payment processor via Hyperswitch webhook. The processor has no relationship with AAP and no reason to fabricate or hide transactions.
+**Orchestrated conversions** are confirmed by a payment source such as a Hyperswitch-normalized PSP webhook that carries AAP metadata.
 
-**Unverified conversions** occur when the purchase happens outside AAP's orchestration (e.g., tracked link fallback). These rely on agent callbacks or merchant reporting and carry a longer validation period and reduced commission.
+**Merchant-reported conversions** occur when the purchase happens in a merchant-controlled flow or non-payment conversion event. These rely on merchant attestation, audit logs, and validation periods.
+
+**Payment-observed conversions** are confirmed by payment data even if AAP did not create the checkout object.
+
+**Reconciled conversions** are matched from later data sources and may require manual review before settlement.
 
 ---
 
@@ -119,21 +125,24 @@ Merchants connect their existing PSP account to AAP via OAuth:
 
 ---
 
-## AAP Code in Payment Metadata
+## Checkout Attribution Metadata
 
-Every AAP-orchestrated payment embeds the AAP Code in the PSP's metadata:
+Every AAP-orchestrated checkout carries AAP attribution metadata on the durable checkout, payment, order, application, or equivalent transaction object. For payment-orchestrated flows, this is usually payment metadata:
 
 ```json
 {
   "metadata": {
     "aap_code": "aap://rako.sh/v1/{base64url_payload}.{base64url_signature}",
-    "aap_recommendation_id": "01JQXK1001SMARTY1GB000001",
-    "aap_session_id": "sess_abc123"
+    "aap_recommendation_id": "01KN6KWQDZ6Y5HPW8KFSDPKNSQ",
+    "aap_session_id": "sess_abc123",
+    "aap_offer_id": "01JQXK1001SMARTY1GB000001",
+    "aap_merchant_id": "01JQXK0001SMARTY000000001",
+    "aap_checkout_id": "01KN6KWQEENKX01N1TZE3R1TPX"
   }
 }
 ```
 
-This is set by AAP when creating the payment via Hyperswitch — not by the agent. The agent cannot modify or forge payment metadata. The PSP stores it alongside the payment record, creating a tamper-proof attribution link.
+This is set by AAP or by a certified merchant integration when creating the checkout record — not by the agent. The agent cannot modify or forge the metadata. The checkout system stores it alongside the transaction record, creating an auditable attribution link. Required and recommended fields are defined in [conversion-ledger.md](./conversion-ledger.md).
 
 On webhook receipt, AAP verifies:
 1. The `aap_code` signature is valid (Ed25519 verification).
@@ -141,7 +150,7 @@ On webhook receipt, AAP verifies:
 3. The payment amount matches the offer price (within tolerance).
 4. The payment status is `succeeded`.
 
-If all checks pass, the conversion is recorded as **verified**.
+If all checks pass, the conversion is recorded in the conversion ledger with the appropriate verification level.
 
 ---
 
