@@ -20,7 +20,7 @@ AAP is an open spec with a centralised trust model. The specification is public 
 Businesses that sell products or services. They publish offers into the AAP registry and pay commission when agent-driven recommendations lead to sales.
 
 ### Agent Builders
-Developers who build AI agents. They integrate the AAP SDK so their agents can discover offers, make recommendations, and earn commission.
+Developers who build AI agents. They integrate the AAP SDK so their agents can discover offers, make recommendations, and preserve attribution for eligible conversions.
 
 ### Agents
 AI systems (Claude, ChatGPT, custom agents) that recommend products to users on behalf of their builders.
@@ -29,7 +29,7 @@ AI systems (Claude, ChatGPT, custom agents) that recommend products to users on 
 The entity that operates the AAP infrastructure:
 - Issues and signs AAP Codes
 - Operates the offer registry
-- Verifies merchants and agents
+- Registers merchants and agents
 - Matches recommendations to conversions
 - Calculates and settles commission
 - Provides fraud detection
@@ -121,7 +121,7 @@ CREATED → ACTIVE → CHECKOUT → CONVERTED → VALIDATED → SETTLED
 - **[Conversion Ledger](./conversion-ledger.md)** — Checkout metadata, conversion lifecycle, and settlement fields
 - **[API Reference](./api.md)** — REST endpoints
 - **[MCP Integration](./mcp.md)** — MCP tool definitions
-- **[Payment Architecture](./payments.md)** — Payment modes, verification, Hyperswitch integration
+- **[Payment Architecture](./payments.md)** — Payment modes, verification requirements, and payment orchestration
 - **[Security](./security.md)** — Signing, fraud prevention, trust model
 
 ## 8. Versioning
