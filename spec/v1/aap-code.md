@@ -198,7 +198,7 @@ When a valid AAP Code is present:
 4. **The commission terms are signed.** They were included in the signed payload and cannot be changed without invalidating the code.
 5. **The code is authentic.** Only Rako's private key could have produced the signature.
 
-## What the AAP Code Does NOT Guarantee
+## What the AAP Code Does NOT Prove
 
 1. **Real-time availability.** The offer may have sold out or expired since issuance. Check the `exp` field.
 2. **Price accuracy at checkout.** For live-pricing verticals (flights, hotels), the price may change. The AAP Code captures the price at discovery, not at checkout.
