@@ -23,8 +23,8 @@ Agent → POST /v1/purchase { recommendationId }
   ← { checkoutUrl, paymentId }
 
 User → opens checkoutUrl (hosted payment link)
-  → enters card on merchant's PSP-hosted checkout
-  → payment settles to merchant via merchant's PSP
+  → enters card on merchant-processor-hosted checkout
+  → payment settles to merchant via merchant's payment processor
 
 Payment webhook → AAP
   → AAP records conversion after required verification checks pass
@@ -35,8 +35,8 @@ Payment webhook → AAP
 2. AAP creates a hosted payment link on the merchant's connected processor.
 3. AAP embeds the AAP Code in the payment's `metadata.aap_code` field.
 4. The checkout URL is returned to the agent, which presents it to the user.
-5. The user enters payment credentials directly into the PSP-hosted checkout.
-6. Payment settles from buyer → merchant's PSP → merchant. AAP never touches funds.
+5. The user enters payment credentials directly into the merchant-processor-hosted checkout.
+6. In the intended merchant-processor model, payment settles from buyer → merchant's payment processor → merchant. AAP does not receive or control buyer funds.
 7. The payment orchestration layer sends a webhook to AAP with the payment outcome.
 8. AAP records the conversion as **verified** only after the webhook signature, AAP Code signature, metadata payload, amount, and payment status checks pass.
 
@@ -48,7 +48,7 @@ The agent has stored payment credentials and completes the purchase without user
 Agent → POST /v1/purchase { recommendationId, paymentMethod }
   ← { confirmation, paymentId, status }
 
-Payment orchestration layer → processes via merchant's PSP
+Payment orchestration layer → processes via merchant's payment processor
   → webhook to AAP
   → AAP records conversion after required verification checks pass
 ```
@@ -57,7 +57,7 @@ Payment orchestration layer → processes via merchant's PSP
 1. Agent calls `POST /v1/purchase` with `recommendationId` and a `paymentMethod` (tokenised card, stored credential).
 2. AAP creates a payment intent on the merchant's connected processor and requests confirmation.
 3. AAP Code is embedded in payment metadata.
-4. Payment settles to merchant via merchant's PSP. AAP never touches funds.
+4. In the intended merchant-processor model, payment settles to the merchant via the merchant's payment processor. AAP does not receive or control buyer funds.
 5. Webhook confirms outcome. Conversion is recorded as verified only after the same webhook, AAP Code, payload, amount, and status checks pass.
 
 **Note:** Mode 2 requires the agent to have legitimate stored payment credentials from the user. AAP does not vault or manage user payment credentials.
@@ -74,15 +74,15 @@ Every party in the transaction has an incentive to misreport:
 |-------|-----------|
 | Agent | Wants commission — could fabricate conversions |
 | Merchant | Wants to avoid commission — could deny conversions |
-| Merchant's PSP | No stake in AAP's commission — neutral third party |
+| Merchant's payment processor | No stake in AAP's commission — independent payment evidence source |
 
-The protocol treats the merchant's PSP as the independent evidence source. A payment event is eligible to become a verified conversion only when AAP can authenticate the event source and reconcile the amount, status, recommendation, offer, and signed AAP Code.
+The protocol treats the merchant's payment processor as the independent evidence source. A payment event is eligible to become a verified conversion only when AAP can authenticate the event source and reconcile the amount, status, recommendation, offer, and signed AAP Code.
 
 ### Verification Levels
 
 | Level | Source | Trust | Commission Rate | Settlement Speed |
 |-------|--------|-------|-----------------|------------------|
-| **Verified** | Authenticated PSP payment webhook plus AAP reconciliation checks | Independent payment evidence confirms the payable outcome | Full commission | Standard (after validation period) |
+| **Verified** | Authenticated payment webhook plus AAP reconciliation checks | Independent payment evidence confirms the payable outcome | Full commission | Standard (after validation period) |
 | **Unverified** | Agent callback or merchant self-report | Trust-dependent — requires validation period | Reduced commission (75%) | Delayed (extended validation period) |
 
 **Verified conversions** require an authenticated event from the merchant's payment processor and successful reconciliation against the signed AAP Code, recommendation, offer, amount, and payment status.
@@ -97,21 +97,21 @@ AAP introduces **zero additional payment processing fees**.
 
 | Fee | Who Pays | To Whom |
 |-----|----------|---------|
-| PSP processing fee (e.g., 1.4% + 20p) | Merchant | Merchant's PSP (Stripe, Adyen, etc.) |
+| Payment processing fee (example rate set by processor) | Merchant | Merchant's payment processor |
 | AAP commission (e.g., £8 CPA) | Merchant | AAP (invoiced monthly as B2B receivable) |
 | AAP network fee (20% of commission) | Deducted from commission | AAP retains; remainder to Agent Builder |
 
-The merchant pays exactly the same PSP fees they'd pay without AAP. Commission is a separate invoice, not a deduction from payment funds.
+The merchant pays the same payment-processing fees they would pay without AAP. Commission is a separate invoice, not a deduction from payment funds.
 
 ---
 
-## Merchant Onboarding (OAuth)
+## Merchant Payment Connector Onboarding
 
-Merchants connect their existing PSP account to AAP via OAuth:
+Merchants connect their existing payment processor account to AAP through a scoped connector flow:
 
-1. Merchant clicks **"Connect your Stripe"** on the AAP dashboard.
-2. OAuth flow redirects to Stripe (or Adyen, Worldpay, etc.).
-3. Merchant authorises scoped access (minimum required permissions).
+1. Merchant clicks **"Connect payment processor"** on the AAP dashboard.
+2. The connector flow redirects to the merchant's selected processor or processor-authorisation page.
+3. Merchant authorises scoped access with the minimum required permissions.
 4. AAP stores the authorised connector configuration for the merchant account.
 5. AAP can now create payment links and receive payment events for that merchant account.
 
@@ -125,7 +125,7 @@ Merchants connect their existing PSP account to AAP via OAuth:
 
 ## AAP Code in Payment Metadata
 
-Every AAP-orchestrated payment embeds the AAP Code in the PSP's metadata:
+Every AAP-orchestrated payment embeds the AAP Code in the payment metadata:
 
 ```json
 {
@@ -154,17 +154,17 @@ If any check is missing or fails, the conversion must remain unverified, pending
 
 ## Payment Orchestration Role
 
-AAP uses a payment orchestration layer between AAP and the merchant's PSP. The orchestration layer is **not** itself the merchant's payment processor.
+AAP uses a payment orchestration layer between AAP and the merchant's payment processor. The orchestration layer is **not** itself the merchant's payment processor.
 
-- Does not hold money
-- Does not move money
-- Does not replace the merchant's PSP
+- Does not hold buyer funds
+- Does not become the merchant of record
+- Does not replace the merchant's payment processor
 
 The orchestration layer provides:
 - **One API** for AAP to create payments across supported processors
 - **Payment links** — hosted checkout pages
 - **Webhooks** — unified event format regardless of underlying processor
-- **Connector framework** — merchant connects their PSP once, AAP uses it for eligible transactions
+- **Connector framework** — merchant connects their payment processor once, AAP uses it for eligible transactions
 
 ---
 
