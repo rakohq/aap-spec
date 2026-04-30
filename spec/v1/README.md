@@ -63,12 +63,12 @@ The payment from merchant to agent builder for driving a sale. Calculated based 
                Fallback URL generated for drop-off recovery
 
 3. TRANSACT    User decides to purchase
-               Agent calls checkout() → transaction initiated
-               AAP routes to merchant checkout
+               Agent calls checkout() → hosted checkout handoff created
+               Checkout handoff does not prove conversion
 
-4. CONVERT     Merchant confirms the sale
-               Merchant calls conversions API with order details
-               AAP matches conversion to recommendation
+4. CONVERT     Platform-side outcome evidence arrives
+               Payment, merchant, or milestone evidence is reconciled
+               AAP records a conversion if evidence validates
 
 5. SETTLE      Validation period passes (no cancellation)
                Commission calculated: merchant terms minus 20% network fee
@@ -90,7 +90,7 @@ CREATED → ACTIVE → CHECKOUT → CONVERTED → VALIDATED → SETTLED
 | CREATED | Agent searches for offers |
 | ACTIVE | Agent records a recommendation |
 | CHECKOUT | Agent initiates checkout |
-| CONVERTED | Merchant confirms sale |
+| CONVERTED | Platform-side outcome evidence validates |
 | VALIDATED | Validation period passes without cancellation |
 | SETTLED | Commission paid to builder |
 | CANCELLED | Customer cancels within validation period |
@@ -120,7 +120,7 @@ CREATED → ACTIVE → CHECKOUT → CONVERTED → VALIDATED → SETTLED
 - **[Commission Model](./commission.md)** — Types, floors, calculation, settlement
 - **[API Reference](./api.md)** — REST endpoints
 - **[MCP Integration](./mcp.md)** — MCP tool definitions
-- **[Payment Architecture](./payments.md)** — Payment modes, verification, Hyperswitch integration
+- **[Payment Architecture](./payments.md)** — Checkout handoff, payment evidence, and conversion boundaries
 - **[Security](./security.md)** — Signing, fraud prevention, trust model
 
 ## 8. Versioning

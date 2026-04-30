@@ -4,7 +4,7 @@
 
 ## Commission Types
 
-Merchants choose their commission structure when they join AAP:
+Merchants choose their commission structure when their offers are configured for AAP:
 
 | Type | Description | Example |
 |------|-------------|---------|
@@ -27,8 +27,8 @@ To prevent a race to the bottom, AAP enforces minimum commission floors per vert
 
 Floors are reviewed quarterly and adjusted based on:
 - Industry benchmark commission rates (Awin, CJ, Impact data)
-- Agent builder feedback (are rates high enough to justify integration?)
-- Merchant acquisition needs (are floors blocking merchant signups?)
+- Agent builder feedback
+- Merchant configuration needs
 
 ## Network Fee
 
@@ -40,12 +40,12 @@ Gross commission (merchant pays)
   × 0.20 = AAP network fee
 
 Example:
-  SMARTY CPA: £8.00
+  Example Mobile CPA: £8.00
   Builder receives: £6.40
   AAP receives: £1.60
 ```
 
-The network fee is non-negotiable for standard tiers. Enterprise merchants (post-2028) may negotiate volume-based discounts (15-18%).
+The network fee is non-negotiable for standard tiers. Different commercial tiers may have different network-fee terms if configured by Rako.
 
 ## Commission by Conversion Path
 
@@ -90,7 +90,7 @@ After validation:
 
 | Event | During Validation | After Validation |
 |-------|------------------|-----------------|
-| Customer cancels | Commission clawed back | Merchant absorbs |
+| Customer cancels | Commission clawed back | Handled by merchant policy |
 | Chargeback | Commission reversed | Commission reversed |
 | Fraud detected | Commission rejected | Commission clawed back + builder flagged |
 | Merchant disputes | Under review | Under review |
@@ -105,8 +105,7 @@ Commission is settled monthly, after validation periods close for the relevant t
 ### Payment Rails
 Settlement uses standard payment infrastructure:
 - Bank transfer (UK Faster Payments / SEPA)
-- Stripe Connect (for builders with Stripe accounts)
-- Agent-to-agent payment rails (Payman, Orthogonal) as they mature
+- Supported payout providers or account-to-account rails where configured
 
 ### Minimum Payout
 £25 minimum per settlement. Below threshold, balance carries forward to next period.
@@ -115,7 +114,7 @@ Settlement uses standard payment infrastructure:
 
 ### CPA (SIM deal)
 ```
-Merchant: SMARTY
+Merchant: Example Mobile
 Commission type: CPA
 Commission value: £8.00
 Conversion path: AAP flow (100%)
@@ -127,7 +126,7 @@ Builder payout: £6.40
 
 ### Percentage (Flight)
 ```
-Merchant: British Airways
+Merchant: Example Travel
 Commission type: Percentage
 Commission value: 5%
 Transaction value: £189.00
@@ -140,7 +139,7 @@ Builder payout: £7.56
 
 ### Hybrid (Insurance)
 ```
-Merchant: Aviva
+Merchant: Example Insurance
 Commission type: Hybrid
 Commission min: £15.00
 Commission value: 3%

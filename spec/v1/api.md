@@ -56,10 +56,10 @@ Search and filter available offers. Automatically creates a session.
   "sessionId": "01KN6KV0TWMH8VS6TDS3S7V2EJ",
   "offers": [
     {
-      "id": "01JQXK1001SMARTY1GB000001",
-      "merchantId": "01JQXK0001SMARTY000000001",
+      "id": "01JQXK1001EXAMPLEOFFER001",
+      "merchantId": "01JQXK0001EXAMPLEMERCH001",
       "vertical": "sim",
-      "provider": "SMARTY",
+      "provider": "Example Mobile",
       "name": "1GB Rolling Monthly",
       "price": 6.00,
       "currency": "GBP",
@@ -95,7 +95,7 @@ Record a recommendation. This is the attribution event.
 ```json
 {
   "sessionId": "01KN6KV0TWMH8VS6TDS3S7V2EJ",
-  "offerId": "01JQXK1001SMARTY1GB000001",
+  "offerId": "01JQXK1001EXAMPLEOFFER001",
   "context": "User asked for the cheapest SIM deal with no contract"
 }
 ```
@@ -114,8 +114,8 @@ Record a recommendation. This is the attribution event.
   "fallbackUrl": "https://aap.link/r/01KN6KWQDZ6Y5HPW8KFSDPKNSQ",
   "attributionRecorded": true,
   "offer": {
-    "id": "01JQXK1001SMARTY1GB000001",
-    "provider": "SMARTY",
+    "id": "01JQXK1001EXAMPLEOFFER001",
+    "provider": "Example Mobile",
     "name": "1GB Rolling Monthly",
     "price": 6.00,
     "currency": "GBP"
@@ -129,7 +129,7 @@ Record a recommendation. This is the attribution event.
 
 #### `POST /v1/checkout`
 
-Initiate checkout for a recommended offer.
+Initiate a server-side hosted checkout handoff for a recommended offer. The checkout response is not conversion proof; conversion requires later platform-side outcome evidence.
 
 **Request Body:**
 
@@ -146,8 +146,8 @@ Initiate checkout for a recommended offer.
 ```json
 {
   "transactionId": "01KN6KWQEENKX01N1TZE3R1TPX",
-  "status": "initiated",
-  "checkoutUrl": "https://merchant.com/checkout?aap_ref=...",
+  "status": "checkout",
+  "checkoutUrl": "https://checkout.example/hosted/abc123",
   "session": { "id": "...", "status": "checkout" }
 }
 ```
@@ -182,7 +182,7 @@ Get session details including recommendations and conversions.
 
 #### `POST /v1/conversions`
 
-Report a completed sale. Called by merchants when a transaction completes.
+Report a completed sale or payable milestone. Called by merchants when merchant-side outcome evidence is available.
 
 **Request Body:**
 
@@ -222,7 +222,7 @@ Report a completed sale. Called by merchants when a transaction completes.
 Issue a signed AAP Code for an offer.
 
 ```json
-{ "offerId": "01JQXK1001SMARTY1GB000001" }
+{ "offerId": "01JQXK1001EXAMPLEOFFER001" }
 ```
 
 #### `POST /v1/codes/verify`

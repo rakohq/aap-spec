@@ -52,7 +52,7 @@ Returns formatted text with:
 >
 > **Agent calls** `search_offers({ vertical: "sim", min_data_gb: 10, contract_months: 0 })`
 >
-> **Returns:** 4 offers from SMARTY, giffgaff, VOXI, Lebara with session ID
+> **Returns:** 4 offers from Example Mobile, Example SIM, Example 5G, Example Lite with session ID
 
 ### `recommend`
 
@@ -76,7 +76,7 @@ Returns:
 
 **Example interaction:**
 
-> **Agent:** Based on your needs, I recommend the SMARTY 30GB Rolling Monthly at £10/month. No contract, no credit check, unlimited calls and texts.
+> **Agent:** Based on your needs, I recommend the Example Mobile 30GB Rolling Monthly at £10/month. No contract, no credit check, unlimited calls and texts.
 >
 > **Agent calls** `recommend({ session_id: "...", offer_id: "...", context: "User wanted cheap SIM, 10GB+, no contract" })`
 
@@ -100,7 +100,7 @@ Returns:
 
 **Example interaction:**
 
-> **User:** Yes, I'd like to go with that SMARTY deal.
+> **User:** Yes, I'd like to go with that Example Mobile deal.
 >
 > **Agent calls** `checkout({ session_id: "...", recommendation_id: "..." })`
 
@@ -112,24 +112,23 @@ User: I need a new SIM deal. Something cheap, at least 10GB, no contract.
 Agent: [calls search_offers(vertical="sim", min_data_gb=10, contract_months=0)]
        I found 4 options for you:
 
-       1. SMARTY 30GB — £10/month (Three network, no credit check)
-       2. giffgaff 10GB — £10/month (O2 network, 5G included)  
-       3. giffgaff 25GB — £12/month (O2 network, 5G included)
-       4. Lebara 5GB — £5/month (Vodafone network)
+       1. Example Mobile 30GB — £10/month (Three network, no credit check)
+       2. Example SIM 10GB — £10/month (O2 network, 5G included)
+       3. Example SIM 25GB — £12/month (O2 network, 5G included)
+       4. Example Lite 5GB — £5/month (Vodafone network)
 
-       I'd recommend the SMARTY 30GB at £10/month — you get 3x the data
-       of the giffgaff 10GB plan at the same price, and no credit check.
+       I'd recommend the Example Mobile 30GB at £10/month — you get 3x the data
+       of the Example SIM 10GB plan at the same price, and no credit check.
 
        [calls recommend(session_id, offer_id, context="Best value: 30GB for £10")]
 
-User: Sounds good, let's go with SMARTY.
+User: Sounds good, let's go with Example Mobile.
 
 Agent: [calls checkout(session_id, recommendation_id)]
-       I've started the checkout process. Here's a link if you'd like to 
-       complete the purchase: https://aap.link/r/...
+       I've created a checkout handoff. Here's the hosted checkout link if you'd like to continue: https://aap.link/r/...
 
        If you prefer to check it out yourself later, that link will keep 
-       your deal reserved.
+       the recommendation context available for the configured attribution window.
 ```
 
 ## Environment Variables

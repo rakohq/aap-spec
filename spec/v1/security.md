@@ -27,7 +27,9 @@ Every event in the attribution chain is logged with:
 - Event type (search, recommend, click, checkout, conversion)
 - Reference to previous event (hash chain)
 
-This creates a tamper-evident audit trail. Modifying any event breaks the chain for all subsequent events.
+Checkout source and conversion state should be derived server-side from accepted context and platform-side outcome evidence. Browser-edited parameters, completion-page display, direct website fallback, or `website_direct` classification are not agent attribution evidence.
+
+This creates a tamper-evident audit trail. Modifying a recorded event should be detectable because subsequent events reference the earlier chain state.
 
 ## Fraud Prevention
 
@@ -38,8 +40,8 @@ This creates a tamper-evident audit trail. Modifying any event breaks the chain 
 | **Session stuffing** | Agent creates thousands of sessions hoping some convert | Rate limiting per agent/builder. Conversion rate floors. |
 | **Identity spoofing** | Agent claims to be a different registered agent | Cryptographic identity via API key. Signed session tokens. |
 | **Commission hijacking** | Agent intercepts another agent's session | Session tokens bound to originating agent. Non-transferable. |
-| **Fake conversions** | Agent simulates a transaction | Merchant-side confirmation required. No self-reporting. |
-| **Self-dealing** | Builder creates fake users | User verification required (phone, email, payment method). |
+| **Fake conversions** | Agent simulates a transaction | Platform-side outcome evidence required. Agent self-reporting is not sufficient. |
+| **Self-dealing** | Builder creates fake users | Configured merchant, payment, or milestone validation controls. |
 | **Churning** | Agent signs up users who immediately cancel | Validation periods + clawback. High churn → builder flagged. |
 | **Click fraud** | Automated clicks on fallback links | IP deduplication, rate limiting, bot detection on redirect service. |
 
@@ -58,14 +60,14 @@ This creates a tamper-evident audit trail. Modifying any event breaks the chain 
 |----------|--------|
 | Suspicious | Flag for review. Continue paying. |
 | Probable fraud | Pause payouts. Manual review. |
-| Confirmed fraud | Suspend builder. Claw back all pending commission. |
+| Confirmed fraud | Suspend builder and apply configured clawback policy. |
 | Repeat offender | Permanent ban. Report to fraud databases. |
 
 ## Trust Model
 
 ### Open Spec, Centralised Trust
 
-AAP uses the same trust model as DNS, Visa, and Stripe:
+AAP uses an open-spec, centrally operated trust model:
 
 | Layer | Open or Centralised |
 |-------|-------------------|
@@ -99,9 +101,9 @@ The same question comes up every time someone builds a trust layer. The answer f
 - **Speed:** Agent transactions happen in milliseconds. Block confirmation takes seconds to minutes.
 - **Cost:** Per-transaction on-chain fees eat into commissions.
 - **Privacy:** On-chain data is visible. Merchant and builder data must be siloed.
-- **Equivalent guarantee:** Hash-chained signed logs provide the same tamper-evidence without distributed consensus overhead.
+- **Equivalent integrity goal:** Hash-chained signed logs can provide tamper-evidence without distributed consensus overhead.
 
-The trust comes from cryptography, not consensus. Ed25519 signatures are just as unforgeable whether they're stored in a database or on a blockchain.
+The trust model uses cryptographic signatures and auditable records rather than distributed consensus.
 
 ## API Security
 
@@ -119,7 +121,7 @@ The trust comes from cryptography, not consensus. Ed25519 signatures are just as
 ### Rate Limiting
 - Per-key rate limits prevent abuse
 - Graduated response: slow down → temporary block → review
-- DDoS protection via Cloudflare
+- DDoS protection at the edge
 
 ---
 

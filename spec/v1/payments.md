@@ -1,164 +1,129 @@
-# Payment Architecture
+# Payment and Checkout Architecture
 
-> How AAP verifies purchases trustlessly without processing payments.
+> How AAP carries recommendation context into checkout and reconciles conversion evidence later.
 
-## Core Principle
+## Core principle
 
-AAP does not process payments. AAP orchestrates payments on the merchant's own payment processor via Hyperswitch. The merchant pays the same processor fees they'd pay on their own website. Commission is invoiced separately to the merchant as a B2B receivable.
+AAP does not require agents or browsers to process payments, define attribution state, or decide whether a conversion occurred. Checkout creation is a handoff boundary: a server-side request can create a hosted checkout URL, and later platform-side outcome evidence determines whether a conversion should be recorded.
+
+Implementations may use a payment orchestration layer, a merchant's payment processor, or merchant-reported outcome feeds. These are implementation choices, not protocol-level promises.
 
 ---
 
-## Payment Modes
+## Checkout handoff
 
-### Mode 1 — User Checkout (Default)
+### User checkout
 
-The agent recommends. The user completes checkout.
+The common path is a user-facing hosted checkout handoff:
 
-```
-Agent → POST /v1/purchase { recommendationId }
-  ← { checkoutUrl, paymentId }
+```text
+Agent or website → POST /v1/checkout { sessionId, recommendationId }
+  ← { checkoutUrl, transactionId, status }
 
-User → opens checkoutUrl (Hyperswitch payment link)
-  → enters card on merchant's PSP-hosted checkout
-  → payment settles to merchant via merchant's PSP
+Buyer → opens checkoutUrl
+  → completes the merchant checkout journey
 
-Hyperswitch → webhook to AAP
-  → AAP records verified conversion
-```
-
-**Flow:**
-1. Agent calls `POST /v1/purchase` with the `recommendationId` from a prior recommendation.
-2. AAP creates a Hyperswitch payment link on the merchant's connected processor.
-3. AAP embeds the AAP Code in the payment's `metadata.aap_code` field.
-4. The checkout URL is returned to the agent, which presents it to the user.
-5. The user enters payment credentials directly into the PSP-hosted checkout.
-6. Payment settles from buyer → merchant's PSP → merchant. AAP never touches funds.
-7. Hyperswitch fires a webhook to AAP confirming the payment outcome.
-8. AAP records the conversion as **verified** (trustless — confirmed by neutral PSP).
-
-### Mode 2 — Agent Autonomous
-
-The agent has stored payment credentials and completes the purchase without user interaction.
-
-```
-Agent → POST /v1/purchase { recommendationId, paymentMethod }
-  ← { confirmation, paymentId, status }
-
-Hyperswitch → processes via merchant's PSP
-  → webhook to AAP
-  → AAP records verified conversion
+Payment or merchant system → outcome evidence to AAP
+  → AAP records a conversion if evidence validates
 ```
 
 **Flow:**
-1. Agent calls `POST /v1/purchase` with `recommendationId` and a `paymentMethod` (tokenised card, stored credential).
-2. AAP creates a Hyperswitch payment intent and processes it directly.
-3. AAP Code is embedded in payment metadata.
-4. Payment settles to merchant via merchant's PSP. AAP never touches funds.
-5. Webhook confirms outcome. Conversion recorded as verified.
 
-**Note:** Mode 2 requires the agent to have legitimate stored payment credentials from the user. AAP does not vault or manage user payment credentials.
+1. An agent records a recommendation and receives a `recommendationId`.
+2. A server-side checkout request sends the `sessionId` and `recommendationId` to AAP.
+3. AAP validates the recommendation context and creates a hosted checkout link when the integration supports it.
+4. The checkout URL is returned as a handoff for the buyer.
+5. The buyer completes the checkout journey outside the agent's control.
+6. A payment webhook, merchant report, or configured milestone later provides platform-side outcome evidence.
+7. AAP records the conversion only if the evidence validates against the recommendation and offer context.
 
----
+The checkout URL does not by itself prove payment, order acceptance, commission eligibility, or settlement eligibility.
 
-## Verification Model
+### Autonomous or stored-payment flows
 
-### Why Trustless Verification Matters
+Some integrations may support an agent-initiated payment attempt with a legitimate stored payment method. In those flows, the same boundary still applies: the request may start a payment attempt, but conversion recording depends on later outcome evidence from the payment or merchant system.
 
-Every party in the transaction has an incentive to misreport:
-
-| Party | Incentive |
-|-------|-----------|
-| Agent | Wants commission — could fabricate conversions |
-| Merchant | Wants to avoid commission — could deny conversions |
-| Merchant's PSP | No stake in AAP's commission — neutral third party |
-
-AAP trusts the PSP. The PSP reports what happened: payment created, succeeded or failed, amount and metadata. This is the same trust model as a bank statement.
-
-### Verification Levels
-
-| Level | Source | Trust | Commission Rate | Settlement Speed |
-|-------|--------|-------|-----------------|------------------|
-| **Verified** | Hyperswitch PSP webhook | Trustless — neutral third party confirms payment | Full commission | Standard (after validation period) |
-| **Unverified** | Agent callback or merchant self-report | Trust-dependent — requires validation period | Reduced commission (75%) | Delayed (extended validation period) |
-
-**Verified conversions** are confirmed by the merchant's payment processor via Hyperswitch webhook. The processor has no relationship with AAP and no reason to fabricate or hide transactions.
-
-**Unverified conversions** occur when the purchase happens outside AAP's orchestration (e.g., tracked link fallback). These rely on agent callbacks or merchant reporting and carry a longer validation period and reduced commission.
+AAP does not require agents to vault or manage user payment credentials.
 
 ---
 
-## Fee Structure
+## Evidence model
 
-AAP introduces **zero additional payment processing fees**.
+AAP separates recommendation evidence, checkout handoff, conversion evidence, and settlement eligibility.
 
-| Fee | Who Pays | To Whom |
-|-----|----------|---------|
-| PSP processing fee (e.g., 1.4% + 20p) | Merchant | Merchant's PSP (Stripe, Adyen, etc.) |
-| AAP commission (e.g., £8 CPA) | Merchant | AAP (invoiced monthly as B2B receivable) |
-| AAP network fee (20% of commission) | Deducted from commission | AAP retains; remainder to Agent Builder |
+| Stage | What it means | What it does not prove |
+|-------|---------------|------------------------|
+| Recommendation | An agent recorded offer context for a session. | That the buyer purchased. |
+| Checkout handoff | A hosted checkout or purchase path was created. | That payment succeeded or commission is owed. |
+| Conversion evidence | A payment, merchant, or milestone event was reconciled. | That settlement is final. |
+| Settlement eligibility | Validation, refund, dispute, and clawback rules have been applied. | That future clawbacks are impossible. |
 
-The merchant pays exactly the same PSP fees they'd pay without AAP. Commission is a separate invoice, not a deduction from payment funds.
+### Verification levels
 
----
+| Level | Source | Trust model | Settlement handling |
+|-------|--------|-------------|---------------------|
+| Payment-observed | Payment processor or payment orchestration webhook | Platform-side payment evidence reconciled with AAP context | Subject to validation, refund, dispute, and clawback windows |
+| Merchant-reported | Merchant reports an order, application, policy, activation, or other payable milestone | Merchant system evidence reconciled with AAP context | Subject to configured validation rules |
+| Lower-confidence fallback | Redirect, tracked link, extension, or matching signal | Requires additional validation | May settle differently by merchant configuration |
 
-## Merchant Onboarding (OAuth)
-
-Merchants connect their existing PSP account to AAP via OAuth:
-
-1. Merchant clicks **"Connect your Stripe"** on the AAP dashboard.
-2. OAuth flow redirects to Stripe (or Adyen, Worldpay, etc.).
-3. Merchant authorises scoped access (minimum required permissions).
-4. AAP stores the access token as a Hyperswitch connector.
-5. AAP can now create payment links and receive webhooks on the merchant's account.
-
-**Scope restrictions (ENG-08):**
-- Read payment intents and payment methods
-- Create payment links / checkout sessions
-- Receive webhooks
-- **Excluded:** payouts, transfers, balance reads, bank account access
+Do not treat browser-supplied parameters, completion-page display, direct website traffic, or `website_direct` classification as agent attribution evidence.
 
 ---
 
-## AAP Code in Payment Metadata
+## Fees and settlement
 
-Every AAP-orchestrated payment embeds the AAP Code in the PSP's metadata:
+AAP commission is separate from the merchant's payment processing fees. Payment processing fees remain between the merchant and its payment processor. AAP settlement logic uses conversion evidence and the merchant's configured commercial terms to calculate commission, network fee, and builder payout.
+
+The protocol does not require commission to be deducted from payment funds. Settlement can happen through invoice, payout, or other merchant-configured settlement processes.
+
+---
+
+## Merchant checkout setup
+
+Merchants may connect checkout and outcome reporting in different ways:
+
+1. Use a hosted checkout or payment orchestration integration.
+2. Send payment webhooks or normalized payment events that include AAP context.
+3. Report merchant-side order, application, activation, policy, or first-bill milestones.
+4. Reconcile refunds, disputes, cancellations, clawbacks, and validation windows.
+
+Any implementation should use least-privilege access and should not expose API keys, webhook secrets, processor credentials, or environment-specific URLs in public docs or client-side code.
+
+---
+
+## AAP Code in checkout metadata
+
+When checkout is created by an AAP-controlled backend path, AAP context can be attached to the payment or checkout record:
 
 ```json
 {
   "metadata": {
     "aap_code": "aap://rako.sh/v1/{base64url_payload}.{base64url_signature}",
-    "aap_recommendation_id": "01JQXK1001SMARTY1GB000001",
-    "aap_session_id": "sess_abc123"
+    "aap_recommendation_id": "01KN6KWQDZ6Y5HPW8KFSDPKNSQ",
+    "aap_session_id": "01KN6KV0TWMH8VS6TDS3S7V2EJ"
   }
 }
 ```
 
-This is set by AAP when creating the payment via Hyperswitch — not by the agent. The agent cannot modify or forge payment metadata. The PSP stores it alongside the payment record, creating a tamper-proof attribution link.
+This metadata should be set by server-side infrastructure, not by the browser or agent client. On outcome receipt, AAP can validate:
 
-On webhook receipt, AAP verifies:
-1. The `aap_code` signature is valid (Ed25519 verification).
-2. The `aap_code` payload matches the recommendation and offer.
-3. The payment amount matches the offer price (within tolerance).
-4. The payment status is `succeeded`.
+1. The `aap_code` signature is valid.
+2. The payload matches the recommendation and offer.
+3. The amount and currency match the offer within configured tolerance.
+4. The outcome status is eligible for the configured conversion flow.
 
-If all checks pass, the conversion is recorded as **verified**.
-
----
-
-## Hyperswitch's Role
-
-Hyperswitch is an open-source payment switch. It is **not** a payment processor.
-
-- Does not hold money
-- Does not move money
-- Does not compete with Stripe, Adyen, or Worldpay
-
-Hyperswitch provides:
-- **One API** for AAP to create payments across 275+ processors
-- **Payment links** — hosted checkout pages
-- **Webhooks** — unified event format regardless of underlying processor
-- **Connector framework** — merchant connects their PSP once, AAP uses it for all transactions
+If checks pass, AAP can record a conversion in the ledger. Validation, refund, dispute, and clawback rules still apply before settlement.
 
 ---
 
-*AAP Protocol Spec v1 — Payment Architecture*
+## Implementation notes
+
+- Hosted checkout is a handoff, not conversion proof.
+- Conversion requires later platform-side outcome evidence.
+- Agents and browsers should not construct attribution, source, conversion, or settlement state.
+- Direct website fallback is not agent attribution evidence.
+- Payment orchestration and processor integrations are implementation details, not protocol promises.
+
+---
+
+*AAP Protocol Spec v1 — Payment and Checkout Architecture*

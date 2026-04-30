@@ -17,17 +17,17 @@ The agent whose session token is on the transaction gets 100% of the commission.
 - Incentivises agents that complete the full loop (discover → recommend → checkout).
 
 **Example:**
-> User asks Claude about broadband. Claude recommends TalkTalk via AAP. User doesn't buy. Next day, user asks ChatGPT about broadband. ChatGPT recommends TalkTalk via AAP. User buys through ChatGPT.
+> User asks Agent A about broadband. Agent A recommends an Example Broadband offer via AAP. User doesn't buy. Next day, user asks Agent B about broadband. Agent B recommends the same offer via AAP. User buys through Agent B's valid AAP flow.
 >
-> **Result:** ChatGPT's builder gets paid. Claude's builder doesn't. Claude's session expired.
+> **Result:** Agent B's builder is attributed. Agent A's expired session is not attributed.
 
 ### Rule 2 — Single-Agent Drop-Off: Fallback Chain
 
-When an agent recommends a product and the user doesn't buy through the agent flow, the recommending agent can still earn — at reduced rates — through the drop-off recovery chain.
+When an agent recommends a product and the user does not continue through the agent checkout flow, fallback paths can preserve lower-confidence attribution context if the merchant configuration supports it.
 
 | Priority | Conversion Path | Commission Rate | Mechanism |
 |----------|----------------|-----------------|-----------|
-| **Best** | AAP flow (user buys through agent) | Full rate | Session-based attribution |
+| **Best** | AAP flow (user reaches checkout through accepted agent context) | Full rate | Session-based attribution plus later conversion evidence |
 | **Good** | Tracked link (user clicks `aap.link/r/...`) | 75% of full rate | Cookie/UTM via redirect |
 | **Okay** | Browser extension (catches user on merchant site) | 75% of full rate | Extension activates tracking |
 | **Last** | Influence attribution (data-matched) | 50% of full rate or flat fee | Temporal + product matching |
@@ -55,7 +55,7 @@ When a user clicks this URL:
 5. Redirects (302) to the merchant's product page
 6. Logs the click event
 
-If the user purchases within the 30-day cookie window, the conversion is attributed to the original recommending agent at the tracked link commission rate.
+If later merchant or payment evidence validates a payable outcome within the configured window, the conversion can be attributed to the original recommending agent at the tracked-link rate.
 
 ## Attribution Window
 
@@ -90,17 +90,17 @@ When `recommend()` is called, the following attribution event is created:
 - Multiple paths claim the same conversion
 
 ### Resolution
-Disputes are resolved using the cryptographically signed event chain. Every event (search, recommendation, click, conversion) is logged with timestamps and agent identity. AAP arbitrates based on this evidence.
+Disputes are resolved using the recorded event chain. Events such as search, recommendation, click, checkout handoff, and conversion are logged with timestamps and actor identity. AAP evaluates disputes against this evidence and the merchant's configured validation rules.
 
 ### Priority Order
 If a conversion could be attributed via multiple paths (e.g., both AAP flow and tracked link), the highest-priority path wins:
 
-1. AAP flow (session-based) — always takes precedence
+1. AAP flow (session-based recommendation plus later conversion evidence) — highest priority
 2. Tracked link — takes precedence over extension and influence
 3. Browser extension — takes precedence over influence
 4. Influence matching — lowest priority
 
-Duplicate attribution is prevented. One conversion = one commission payment.
+Duplicate attribution should be prevented. One accepted conversion maps to one commission path.
 
 ---
 
