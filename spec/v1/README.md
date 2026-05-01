@@ -120,7 +120,7 @@ CREATED → ACTIVE → CHECKOUT → CONVERTED → VALIDATED → SETTLED
 - **[Commission Model](./commission.md)** — Types, floors, calculation, settlement
 - **[API Reference](./api.md)** — REST endpoints
 - **[MCP Integration](./mcp.md)** — MCP tool definitions
-- **[Payment Architecture](./payments.md)** — Payment modes, verification, Hyperswitch integration
+- **[Payment Architecture](./payments.md)** — Payment modes, checkout handoff, and conversion evidence
 - **[Security](./security.md)** — Signing, fraud prevention, trust model
 
 ## 8. Versioning
