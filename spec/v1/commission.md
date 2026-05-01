@@ -99,14 +99,16 @@ Builders can challenge clawbacks through the dispute process with evidence from 
 
 ## Settlement
 
+Settlement is recorded as ledger fields linked to a validated conversion. The protocol fields are defined in [conversion-ledger.md](./conversion-ledger.md); implementations may invoice merchants, batch payouts, or use external payout rails without changing the attribution record.
+
 ### Schedule
 Commission is settled monthly, after validation periods close for the relevant transactions.
 
 ### Payment Rails
-Settlement uses standard payment infrastructure:
-- Bank transfer (UK Faster Payments / SEPA)
-- Stripe Connect (for builders with Stripe accounts)
-- Agent-to-agent payment rails (Payman, Orthogonal) as they mature
+Settlement uses standard payout infrastructure:
+- Bank transfer where supported
+- Processor-managed payout accounts where supported
+- Future agent-native payout rails as they mature
 
 ### Minimum Payout
 £25 minimum per settlement. Below threshold, balance carries forward to next period.

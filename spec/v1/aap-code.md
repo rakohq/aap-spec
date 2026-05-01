@@ -4,9 +4,9 @@
 
 ## What It Is
 
-An AAP Code is a cryptographically signed token issued by Rako for every offer. It encodes everything needed for attribution in a single, tamper-proof string.
+An AAP Code is a cryptographically signed token issued by Rako for every offer. It encodes the offer, merchant, price, currency, commission terms, and expiry in a signed string.
 
-An agent cannot fake one. A merchant cannot self-issue one. A competitor cannot generate one that Rako will honour.
+An agent cannot fake a valid Rako-issued code. A merchant cannot self-issue one. A competitor cannot generate one that Rako will honour.
 
 ## Format
 
@@ -40,49 +40,56 @@ aap://rako.sh/v1/eyJ2IjoiMSIsImlzcyI6InJha28uc2giLCJvZmYiOiIwMUpRWEsxMDAxU01BUlR
 
 ---
 
-## Payment Metadata Embedding
+## Checkout Metadata Embedding
 
-When a purchase is initiated through AAP, the AAP Code is embedded in payment metadata by the AAP platform via Hyperswitch. Agents do **not** manually embed AAP Codes in order notes or descriptions.
+When checkout is initiated through AAP, the AAP Code is carried in structured checkout attribution metadata by the AAP platform or a certified merchant integration. The metadata may live on a checkout, payment, order, application, or equivalent durable transaction object. Agents do **not** manually embed AAP Codes in order notes or descriptions.
 
 ### How It Works
 
-1. Agent calls `POST /v1/purchase` with a `recommendationId`.
-2. AAP creates a payment link/intent on the merchant's PSP via Hyperswitch.
-3. AAP sets the following metadata on the payment object:
+1. Agent calls the checkout endpoint or tool with a `recommendationId`.
+2. AAP creates or records a checkout attempt for the merchant flow.
+3. AAP or the certified merchant integration sets the following metadata on the durable checkout, payment, order, application, or equivalent transaction object:
 
 ```json
 {
   "metadata": {
     "aap_code": "aap://rako.sh/v1/{base64url_payload}.{base64url_signature}",
-    "aap_recommendation_id": "01JQXK1001SMARTY1GB000001",
-    "aap_session_id": "sess_abc123"
+    "aap_recommendation_id": "01KN6KWQDZ6Y5HPW8KFSDPKNSQ",
+    "aap_session_id": "sess_abc123",
+    "aap_offer_id": "01JQXK1001SMARTY1GB000001",
+    "aap_merchant_id": "01JQXK0001SMARTY000000001",
+    "aap_checkout_id": "01KN6KWQEENKX01N1TZE3R1TPX"
   }
 }
 ```
 
-4. The merchant's PSP stores this metadata alongside the payment record.
-5. On payment completion, the PSP webhook delivers the metadata back to AAP.
-6. AAP verifies the `aap_code` signature and matches it to the recommendation.
+4. The merchant or payment system stores this metadata alongside the transaction record.
+5. On conversion, the merchant, payment source, or reconciliation process delivers the metadata or a durable reference back to AAP.
+6. AAP verifies the `aap_code` signature and reconciles the metadata against the recorded recommendation before recording the conversion at the appropriate verification level.
 
 ### Why Platform-Side Embedding
 
 | Approach | Problem |
 |----------|----------|
 | Agent embeds AAP Code in order notes | Agent can forge or omit codes |
-| Merchant embeds AAP Code at checkout | Merchant can strip codes to avoid commission |
-| **AAP embeds via Hyperswitch** | **Tamper-proof — neither agent nor merchant controls metadata** |
+| Merchant stores only an unaudited free-text note | Metadata can be stripped or altered without evidence |
+| **AAP or certified integration stores structured metadata** | **Auditable — attribution fields are bound to the checkout and conversion evidence** |
 
-Because AAP creates the payment object through Hyperswitch, the AAP Code is set at creation time. The merchant's PSP stores it as immutable payment metadata. Neither the agent nor the merchant can modify it after creation.
+For payment-orchestrated flows, AAP can set the metadata when creating the payment or checkout object. For merchant-controlled flows, the certified integration must preserve the same fields on a durable order/application record and return them during conversion reporting.
 
 ### Verification on Webhook
 
-When AAP receives a payment webhook, it:
+For a payment event to close the verification loop, AAP must:
 
-1. Extracts `metadata.aap_code` from the payment event.
-2. Verifies the Ed25519 signature against the public key at `rako.sh/.well-known/jwks.json`.
-3. Decodes the payload and confirms the offer, merchant, and price match.
-4. Checks the payment amount matches the AAP Code price (within tolerance).
-5. Records the conversion as **verified** if all checks pass.
+1. Authenticate the webhook as coming from the configured payment event source.
+2. Extract `metadata.aap_code` from the payment event.
+3. Verify the Ed25519 signature against the public key at `rako.sh/.well-known/jwks.json`.
+4. Decode the payload and confirm the offer, merchant, recommendation, and price match.
+5. Check the payment amount matches the AAP Code price or merchant-defined conversion value within tolerance.
+6. Confirm the payment status is a successful payable state.
+7. Record the conversion as verified only if all required checks pass.
+
+Implementation status should be stated separately from this protocol requirement. A hosted implementation that signs AAP Codes but does not yet authenticate payment webhooks and reconcile code, metadata, amount, and status on the webhook path has not closed the verified-payment loop.
 
 ## Signing
 
@@ -181,17 +188,17 @@ Response (invalid):
 }
 ```
 
-## What the AAP Code Guarantees
+## What the AAP Code Proves
 
 When a valid AAP Code is present:
 
-1. **The offer is real.** It was published by a verified merchant on the AAP registry.
-2. **The price is current.** It was accurate at the time of issuance.
-3. **The merchant is vetted.** They passed Rako's merchant verification.
-4. **The commission terms are immutable.** They were locked at issuance and cannot be altered retroactively.
+1. **The offer was issued by Rako.** It was published in the AAP registry when the code was created.
+2. **The price is a signed issuance snapshot.** It was accurate according to Rako's registry at the time of issuance.
+3. **The merchant identifier was recorded by Rako.** The code identifies the merchant account associated with the offer at issuance time.
+4. **The commission terms are signed.** They were included in the signed payload and cannot be changed without invalidating the code.
 5. **The code is authentic.** Only Rako's private key could have produced the signature.
 
-## What the AAP Code Does NOT Guarantee
+## What the AAP Code Does NOT Prove
 
 1. **Real-time availability.** The offer may have sold out or expired since issuance. Check the `exp` field.
 2. **Price accuracy at checkout.** For live-pricing verticals (flights, hotels), the price may change. The AAP Code captures the price at discovery, not at checkout.

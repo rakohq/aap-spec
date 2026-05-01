@@ -2,7 +2,7 @@
 
 > The open standard for AI agent affiliate attribution.
 
-AAP defines how AI agents discover offers, record recommendations, and earn commission when those recommendations lead to purchases — without cookies, tracking pixels, or browser sessions.
+AAP defines how AI agents discover offers, record recommendations, and preserve attribution when those recommendations lead to eligible conversions — without cookies, tracking pixels, or browser sessions.
 
 ## Documents
 
@@ -12,6 +12,7 @@ AAP defines how AI agents discover offers, record recommendations, and earn comm
 | [AAP Code](./spec/v1/aap-code.md) | The signed attribution token — the core primitive |
 | [Attribution Model](./spec/v1/attribution.md) | How attribution works — binary + fallback chain |
 | [Commission Model](./spec/v1/commission.md) | Commission types, floors, and settlement |
+| [Conversion Ledger](./spec/v1/conversion-ledger.md) | Checkout metadata, conversion lifecycle, and settlement fields |
 | [API Reference](./spec/v1/api.md) | REST API endpoints |
 | [MCP Integration](./spec/v1/mcp.md) | Using AAP as an MCP tool |
 | [Security](./spec/v1/security.md) | Cryptographic signing, fraud prevention, trust model |

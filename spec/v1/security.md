@@ -65,7 +65,7 @@ This creates a tamper-evident audit trail. Modifying any event breaks the chain 
 
 ### Open Spec, Centralised Trust
 
-AAP uses the same trust model as DNS, Visa, and Stripe:
+AAP uses a familiar open-spec, centralised-operator trust model:
 
 | Layer | Open or Centralised |
 |-------|-------------------|
@@ -99,7 +99,7 @@ The same question comes up every time someone builds a trust layer. The answer f
 - **Speed:** Agent transactions happen in milliseconds. Block confirmation takes seconds to minutes.
 - **Cost:** Per-transaction on-chain fees eat into commissions.
 - **Privacy:** On-chain data is visible. Merchant and builder data must be siloed.
-- **Equivalent guarantee:** Hash-chained signed logs provide the same tamper-evidence without distributed consensus overhead.
+- **Equivalent audit property:** Hash-chained signed logs provide tamper-evidence without distributed consensus overhead.
 
 The trust comes from cryptography, not consensus. Ed25519 signatures are just as unforgeable whether they're stored in a database or on a blockchain.
 
@@ -119,7 +119,7 @@ The trust comes from cryptography, not consensus. Ed25519 signatures are just as
 ### Rate Limiting
 - Per-key rate limits prevent abuse
 - Graduated response: slow down → temporary block → review
-- DDoS protection via Cloudflare
+- Network-level DDoS protections at the edge
 
 ---
 

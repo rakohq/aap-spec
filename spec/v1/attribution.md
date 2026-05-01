@@ -81,6 +81,8 @@ When `recommend()` is called, the following attribution event is created:
 | Timestamp | When the recommendation was made |
 | Fallback URL | The drop-off recovery URL |
 
+Checkout and conversion records carry additional required metadata so the recommendation can be reconciled across merchant APIs, payment orchestration, and fallback paths. See [conversion-ledger.md](./conversion-ledger.md).
+
 ## Disputes
 
 ### When Disputes Happen
