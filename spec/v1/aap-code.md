@@ -76,13 +76,13 @@ Because AAP associates the AAP Code with the checkout handoff, later outcome evi
 
 ### Verification on Webhook
 
-When AAP receives a payment webhook, it:
+A production payment-outcome verification path is expected to apply these checks when a supported checkout or reporting path returns AAP attribution context. This describes required production verification behavior, not a claim that every current checkout or webhook path already performs these checks live.
 
-1. Extracts `metadata.aap_code` from the payment event.
-2. Verifies the Ed25519 signature against the public key at `rako.sh/.well-known/jwks.json`.
-3. Decodes the payload and confirms the offer, merchant, and price match.
-4. Checks the payment amount matches the AAP Code price (within tolerance).
-5. Records the conversion state supported by the evidence if all applicable checks pass.
+1. Extract `metadata.aap_code` or the equivalent AAP attribution field from the authenticated outcome event or merchant report.
+2. Verify the Ed25519 signature against the current Rako public key.
+3. Decode the payload and confirm the offer, merchant, and signed pricing context match the recommendation record.
+4. Check the paid amount and currency against the AAP Code and applicable tolerance rules for the vertical or agreement.
+5. Record only the conversion state supported by the available evidence if all applicable checks pass.
 
 ## Signing
 

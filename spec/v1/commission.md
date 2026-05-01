@@ -102,11 +102,11 @@ Builders can challenge clawbacks through the dispute process with evidence from 
 ### Schedule
 Commission is settled monthly, after validation periods close for the relevant transactions.
 
-### Payment Rails
+### Builder payout methods
 Settlement uses standard payout infrastructure, such as:
 - Bank transfer where available
 - Approved payout providers supported by Rako
-- Future agent-to-agent payout rails if they mature and pass compliance review
+- Future builder payout methods if they mature and pass agreement and compliance review
 
 ### Minimum Payout
 £25 minimum per settlement. Below threshold, balance carries forward to next period.
