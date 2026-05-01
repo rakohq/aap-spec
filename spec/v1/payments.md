@@ -145,7 +145,7 @@ If the applicable checks pass, AAP records the conversion state supported by tha
 
 ## Payment Orchestration Role
 
-AAP's payment orchestration layer provides a neutral abstraction over merchant checkout and payment-provider differences. It may provide:
+AAP's payment orchestration layer provides a common abstraction over merchant checkout and payment-provider differences. It may provide:
 
 - Hosted checkout link creation
 - Payment outcome event normalization

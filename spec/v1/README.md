@@ -29,9 +29,9 @@ AI systems (Claude, ChatGPT, custom agents) that recommend products to users on 
 The entity that operates the AAP infrastructure:
 - Issues and signs AAP Codes
 - Operates the offer registry
-- Verifies merchants and agents
+- Runs merchant and agent registration checks
 - Matches recommendations to conversions
-- Calculates and settles commission
+- Administers commission calculation and settlement according to applicable terms
 - Provides fraud detection
 
 ## 3. Core Concepts
@@ -49,7 +49,7 @@ An attribution event. When an agent calls `recommend()`, it records who recommen
 A completed transaction. When a user purchases a recommended product, the merchant reports the conversion. AAP matches it to the original recommendation.
 
 ### Commission
-The payment from merchant to agent builder for driving a sale. Calculated based on merchant-defined terms, minus the 20% network fee.
+The payment from merchant to agent builder for driving a sale. Calculated based on merchant-defined terms and the applicable network fee schedule; examples in this spec use a 20% network-fee model for illustration unless otherwise agreed.
 
 ## 4. The Attribution Flow
 
@@ -71,7 +71,7 @@ The payment from merchant to agent builder for driving a sale. Calculated based 
                AAP matches conversion to recommendation
 
 5. SETTLE      Validation period passes (no cancellation)
-               Commission calculated: merchant terms minus 20% network fee
+               Commission calculated under merchant terms and applicable network-fee schedule
                Builder receives payout
 ```
 
@@ -132,4 +132,4 @@ Current version: **v1.0.0**
 ---
 
 *AAP Specification v1.0.0 — Published 2 April 2026*
-*Rako Ltd — [rako.sh](https://rako.sh)*
+*RAKO HQ LTD (Company No. 17132612) — [rako.sh](https://rako.sh)*

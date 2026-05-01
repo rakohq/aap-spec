@@ -72,7 +72,7 @@ AAP uses a centralised registry, verification, and settlement trust model:
 | The specification | **Open** — anyone can read and implement |
 | AAP Code issuance | **Centralised** — only Rako issues valid codes |
 | Verification | **Centralised** — Rako verifies conversions |
-| Settlement | **Centralised** — Rako settles commission |
+| Settlement | **Centralised** — Rako administers commission settlement according to applicable terms |
 | Fraud detection | **Closed** — proprietary models and rules |
 
 ### What Each Party Can Verify

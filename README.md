@@ -20,7 +20,8 @@ AAP defines how AI agents discover offers, record recommendations, and earn comm
 
 ```python
 # Python
-from aap import AAP
+from agent_attribution_protocol import AAP
+
 aap = AAP(api_key="your-key")
 offers = aap.search(vertical="sim", max_price=10)
 rec = aap.recommend(offers[0], context="user asked for cheap SIM")
@@ -60,8 +61,8 @@ AAP replaces the entire chain with one principle: **the transaction flows throug
 
 This specification is published under the [Apache 2.0 licence](./LICENCE).
 
-"Agent Attribution Protocol" is a trademark of Rako Ltd (UK00004367937).
+Trademark notice: "Agent Attribution Protocol" is the subject of UK trademark application UK00004367937. Check the current UKIPO record for live status and owner details before relying on this notice.
 
 ---
 
-*Rako Ltd — [rako.sh](https://rako.sh)*
+*RAKO HQ LTD (Company No. 17132612) — [rako.sh](https://rako.sh)*
