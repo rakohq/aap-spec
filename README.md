@@ -2,7 +2,7 @@
 
 > The open standard for AI agent affiliate attribution.
 
-AAP defines how AI agents discover offers, record recommendations, and earn commission when those recommendations lead to purchases — without cookies, tracking pixels, or browser sessions.
+AAP defines how AI agents discover offers, record recommendations, and preserve attribution when those recommendations lead to eligible conversions — without cookies, tracking pixels, or browser sessions.
 
 ## Documents
 

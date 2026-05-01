@@ -4,9 +4,9 @@
 
 ## What It Is
 
-An AAP Code is a cryptographically signed token issued by Rako for every offer. It encodes everything needed for attribution in a single, tamper-proof string.
+An AAP Code is a cryptographically signed token issued by Rako for every offer. It encodes the offer, merchant, price, currency, commission terms, and expiry in a signed string.
 
-An agent cannot fake one. A merchant cannot self-issue one. A competitor cannot generate one that Rako will honour.
+An agent cannot fake a valid Rako-issued code. A merchant cannot self-issue one. A competitor cannot generate one that Rako will honour.
 
 ## Format
 
@@ -42,12 +42,12 @@ aap://rako.sh/v1/eyJ2IjoiMSIsImlzcyI6InJha28uc2giLCJvZmYiOiIwMUpRWEsxMDAxU01BUlR
 
 ## Payment Metadata Embedding
 
-When a purchase is initiated through AAP, the AAP Code is embedded in payment metadata by the AAP platform via Hyperswitch. Agents do **not** manually embed AAP Codes in order notes or descriptions.
+When a purchase is initiated through AAP, the AAP Code is embedded in payment metadata by the AAP platform through the payment orchestration layer. Agents do **not** manually embed AAP Codes in order notes or descriptions.
 
 ### How It Works
 
 1. Agent calls `POST /v1/purchase` with a `recommendationId`.
-2. AAP creates a payment link/intent on the merchant's PSP via Hyperswitch.
+2. AAP creates a payment link/intent on the merchant's payment processor through the payment orchestration layer.
 3. AAP sets the following metadata on the payment object:
 
 ```json
@@ -60,9 +60,9 @@ When a purchase is initiated through AAP, the AAP Code is embedded in payment me
 }
 ```
 
-4. The merchant's PSP stores this metadata alongside the payment record.
-5. On payment completion, the PSP webhook delivers the metadata back to AAP.
-6. AAP verifies the `aap_code` signature and matches it to the recommendation.
+4. The merchant's payment processor stores this metadata alongside the payment record.
+5. On payment completion, the payment webhook delivers the metadata back to AAP.
+6. AAP must verify the payment event source, the `aap_code` signature, and the match between the payment metadata and the recorded recommendation before treating the conversion as verified.
 
 ### Why Platform-Side Embedding
 
@@ -70,19 +70,23 @@ When a purchase is initiated through AAP, the AAP Code is embedded in payment me
 |----------|----------|
 | Agent embeds AAP Code in order notes | Agent can forge or omit codes |
 | Merchant embeds AAP Code at checkout | Merchant can strip codes to avoid commission |
-| **AAP embeds via Hyperswitch** | **Tamper-proof — neither agent nor merchant controls metadata** |
+| **AAP embeds through payment orchestration** | **Stronger attribution path — the agent does not control payment metadata** |
 
-Because AAP creates the payment object through Hyperswitch, the AAP Code is set at creation time. The merchant's PSP stores it as immutable payment metadata. Neither the agent nor the merchant can modify it after creation.
+Because AAP creates the payment object through the payment orchestration layer, the AAP Code is set at creation time. The protocol relies on the payment processor returning that metadata in an authenticated payment event and on AAP verifying the event, signature, payload, amount, and status before recording a verified conversion.
 
 ### Verification on Webhook
 
-When AAP receives a payment webhook, it:
+For a payment event to close the verification loop, AAP must:
 
-1. Extracts `metadata.aap_code` from the payment event.
-2. Verifies the Ed25519 signature against the public key at `rako.sh/.well-known/jwks.json`.
-3. Decodes the payload and confirms the offer, merchant, and price match.
-4. Checks the payment amount matches the AAP Code price (within tolerance).
-5. Records the conversion as **verified** if all checks pass.
+1. Authenticate the webhook as coming from the configured payment event source.
+2. Extract `metadata.aap_code` from the payment event.
+3. Verify the Ed25519 signature against the public key at `rako.sh/.well-known/jwks.json`.
+4. Decode the payload and confirm the offer, merchant, recommendation, and price match.
+5. Check the payment amount matches the AAP Code price (within tolerance).
+6. Confirm the payment status is a successful payable state.
+7. Record the conversion as **verified** only if all checks pass.
+
+Implementation status should be stated separately from this protocol requirement. A hosted implementation that signs AAP Codes but does not yet verify those codes on the payment webhook path has not closed the verified-payment loop.
 
 ## Signing
 
@@ -181,14 +185,14 @@ Response (invalid):
 }
 ```
 
-## What the AAP Code Guarantees
+## What the AAP Code Proves
 
 When a valid AAP Code is present:
 
-1. **The offer is real.** It was published by a verified merchant on the AAP registry.
-2. **The price is current.** It was accurate at the time of issuance.
-3. **The merchant is vetted.** They passed Rako's merchant verification.
-4. **The commission terms are immutable.** They were locked at issuance and cannot be altered retroactively.
+1. **The offer was issued by Rako.** It was published in the AAP registry when the code was created.
+2. **The price is a signed issuance snapshot.** It was accurate according to Rako's registry at the time of issuance.
+3. **The merchant identifier was recorded by Rako.** The code identifies the merchant account associated with the offer at issuance time.
+4. **The commission terms are signed.** They were included in the signed payload and cannot be changed without invalidating the code.
 5. **The code is authentic.** Only Rako's private key could have produced the signature.
 
 ## What the AAP Code Does NOT Guarantee
