@@ -32,7 +32,7 @@ Floors are reviewed quarterly and adjusted based on:
 
 ## Network Fee
 
-AAP takes a 20% network fee on every commission paid out.
+AAP's standard illustrative model uses a 20% network fee on commission paid out. Actual commercial terms are subject to the applicable merchant, builder, and Rako agreement.
 
 ```
 Gross commission (merchant pays)
@@ -45,18 +45,18 @@ Example:
   AAP receives: £1.60
 ```
 
-The network fee is non-negotiable for standard tiers. Enterprise merchants (post-2028) may negotiate volume-based discounts (15-18%).
+Network-fee schedules may vary by agreement, tier, or future commercial programme. Do not treat the examples in this public specification as a binding offer or final statement of commercial terms.
 
 ## Commission by Conversion Path
 
 Different conversion paths earn different commission rates:
 
-| Path | Rate | Example (£8 CPA) |
+| Path | Rate | Example under illustrative 20% network-fee model (£8 CPA) |
 |------|------|-------------------|
-| **AAP flow** (direct) | 100% of merchant rate | £8.00 → £6.40 builder, £1.60 AAP |
-| **Tracked link** | 75% of merchant rate | £6.00 → £4.80 builder, £1.20 AAP |
-| **Browser extension** | 75% of merchant rate | £6.00 → £4.80 builder, £1.20 AAP |
-| **Influence attribution** | 50% of merchant rate | £4.00 → £3.20 builder, £0.80 AAP |
+| **AAP flow** (direct) | 100% of merchant rate where supported by agreement | £8.00 → £6.40 builder, £1.60 AAP |
+| **Tracked link** | 75% of merchant rate where supported by agreement | £6.00 → £4.80 builder, £1.20 AAP |
+| **Browser extension** | 75% of merchant rate where supported by agreement | £6.00 → £4.80 builder, £1.20 AAP |
+| **Influence attribution** | 50% of merchant rate or flat fee where supported by agreement | £4.00 → £3.20 builder, £0.80 AAP |
 
 The reduced rates for non-direct paths reflect:
 - Lower certainty of attribution
@@ -102,11 +102,11 @@ Builders can challenge clawbacks through the dispute process with evidence from 
 ### Schedule
 Commission is settled monthly, after validation periods close for the relevant transactions.
 
-### Payment Rails
-Settlement uses standard payment infrastructure:
-- Bank transfer (UK Faster Payments / SEPA)
-- Stripe Connect (for builders with Stripe accounts)
-- Agent-to-agent payment rails (Payman, Orthogonal) as they mature
+### Builder payout methods
+Settlement uses standard payout infrastructure, such as:
+- Bank transfer where available
+- Approved payout providers supported by Rako
+- Future builder payout methods if they mature and pass agreement and compliance review
 
 ### Minimum Payout
 £25 minimum per settlement. Below threshold, balance carries forward to next period.
@@ -121,7 +121,7 @@ Commission value: £8.00
 Conversion path: AAP flow (100%)
 
 Commission: £8.00
-Network fee (20%): £1.60
+Network fee (illustrative 20%): £1.60
 Builder payout: £6.40
 ```
 
@@ -134,7 +134,7 @@ Transaction value: £189.00
 Conversion path: AAP flow (100%)
 
 Commission: £189 × 0.05 = £9.45
-Network fee (20%): £1.89
+Network fee (illustrative 20%): £1.89
 Builder payout: £7.56
 ```
 
@@ -149,7 +149,7 @@ Conversion path: Tracked link (75%)
 
 Base commission: £15.00 + (£487.32 × 0.03) = £29.62
 Tracked link rate: £29.62 × 0.75 = £22.22
-Network fee (20%): £4.44
+Network fee (illustrative 20%): £4.44
 Builder payout: £17.78
 ```
 

@@ -65,14 +65,14 @@ This creates a tamper-evident audit trail. Modifying any event breaks the chain 
 
 ### Open Spec, Centralised Trust
 
-AAP uses the same trust model as DNS, Visa, and Stripe:
+AAP uses a centralised registry, verification, and settlement trust model:
 
 | Layer | Open or Centralised |
 |-------|-------------------|
 | The specification | **Open** — anyone can read and implement |
 | AAP Code issuance | **Centralised** — only Rako issues valid codes |
 | Verification | **Centralised** — Rako verifies conversions |
-| Settlement | **Centralised** — Rako settles commission |
+| Settlement | **Centralised** — Rako administers commission settlement according to applicable terms |
 | Fraud detection | **Closed** — proprietary models and rules |
 
 ### What Each Party Can Verify
@@ -99,9 +99,9 @@ The same question comes up every time someone builds a trust layer. The answer f
 - **Speed:** Agent transactions happen in milliseconds. Block confirmation takes seconds to minutes.
 - **Cost:** Per-transaction on-chain fees eat into commissions.
 - **Privacy:** On-chain data is visible. Merchant and builder data must be siloed.
-- **Equivalent guarantee:** Hash-chained signed logs provide the same tamper-evidence without distributed consensus overhead.
+- **Tamper-evidence without consensus:** Hash-chained signed logs provide audit evidence without distributed consensus overhead.
 
-The trust comes from cryptography, not consensus. Ed25519 signatures are just as unforgeable whether they're stored in a database or on a blockchain.
+The trust model relies on cryptographic signing and controlled verification rather than public consensus. Ed25519 signatures remain verifiable whether the signed records are stored in a private database or on a public ledger.
 
 ## API Security
 
@@ -119,7 +119,7 @@ The trust comes from cryptography, not consensus. Ed25519 signatures are just as
 ### Rate Limiting
 - Per-key rate limits prevent abuse
 - Graduated response: slow down → temporary block → review
-- DDoS protection via Cloudflare
+- DDoS protection at the network edge
 
 ---
 
